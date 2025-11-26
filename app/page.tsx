@@ -8,79 +8,112 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
-import { ArrowUp, Loader2, Plus, Square, Mic, MicOff } from "lucide-react";
+import { ArrowUp, Loader2, Mic, MicOff, Plus, Square, Volume2 } from "lucide-react";
 import { MessageWall } from "@/components/messages/message-wall";
 import { ChatHeader } from "@/app/parts/chat-header";
 import { ChatHeaderBlock } from "@/app/parts/chat-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UIMessage } from "ai";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config";
 import Image from "next/image";
 import Link from "next/link";
 import { Sidebar } from "@/app/components/Sidebar";
 
 const formSchema = z.object({
-  message: z.string().min(1, "Message cannot be empty.").max(2000),
+  message: z.string().min(1).max(2000),
 });
 
+// Local storage
 const STORAGE_KEY = "chat-messages";
 
-type StorageData = {
-  messages: UIMessage[];
-  durations: Record<string, number>;
-};
-
-const loadMessagesFromStorage = () => {
+// Load stored messages
+const loadMessages = () => {
   if (typeof window === "undefined") return { messages: [], durations: {} };
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return { messages: [], durations: {} };
-    return JSON.parse(stored);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { messages: [], durations: {} };
+    return JSON.parse(raw);
   } catch {
     return { messages: [], durations: {} };
   }
 };
 
-const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, number>) => {
+// Save stored messages
+const saveMessages = (messages: UIMessage[], durations: any) => {
   if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ messages, durations }));
-  } catch {}
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ messages, durations }));
 };
 
-export default function Chat() {
+export default function ChatPage() {
   const [isClient, setIsClient] = useState(false);
-  const [durations, setDurations] = useState<Record<string, number>>({});
-  const welcomeMessageShownRef = useRef(false);
+  const welcomeShown = useRef(false);
+  const stored = typeof window !== "undefined" ? loadMessages() : { messages: [], durations: {} };
 
-  const stored = typeof window !== "undefined" ? loadMessagesFromStorage() : { messages: [], durations: {} };
-  const [initialMessages] = useState<UIMessage[]>(stored.messages);
-
+  // useChat handler from ai-sdk
   const { messages, sendMessage, status, stop, setMessages } = useChat({
-    messages: initialMessages,
+    messages: stored.messages,
   });
 
-  // -------------------------
-  // VOICE RECORDING STATE
-  // -------------------------
-  const [isRecording, setIsRecording] = useState(false);
-  let mediaRecorder: MediaRecorder | null = null;
-  let audioChunks: BlobPart[] = [];
+  const [durations, setDurations] = useState(stored.durations);
 
-  // -------------------------
-  // START RECORDING
-  // -------------------------
-  async function startRecording() {
+  useEffect(() => {
+    setIsClient(true);
+    setMessages(stored.messages);
+  }, []);
+
+  // Save messages to localStorage
+  useEffect(() => {
+    if (isClient) saveMessages(messages, durations);
+  }, [messages, durations, isClient]);
+
+  // Show welcome message if needed
+  useEffect(() => {
+    if (isClient && messages.length === 0 && !welcomeShown.current) {
+      const welcome: UIMessage = {
+        id: `welcome-${Date.now()}`,
+        role: "assistant",
+        parts: [{ type: "text", text: WELCOME_MESSAGE }],
+      };
+      setMessages([welcome]);
+      saveMessages([welcome], {});
+      welcomeShown.current = true;
+    }
+  }, [isClient, messages.length]);
+
+  // react-hook-form
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: { message: "" },
+  });
+
+  const handleOnSubmit = (data: any) => {
+    sendMessage({ text: data.message });
+    form.reset();
+  };
+
+  // ===========================
+  // VOICE RECORDING LOGIC
+  // ===========================
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<BlobPart[]>([]);
+  const lastAudioURL = useRef<string | null>(null);
+
+  const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-      audioChunks = [];
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+      recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+
+        // Playable audio URL (for user playback)
+        lastAudioURL.current = URL.createObjectURL(audioBlob);
 
         const formData = new FormData();
         formData.append("file", audioBlob);
@@ -91,90 +124,48 @@ export default function Chat() {
         });
 
         const data = await res.json();
-        const text = data.text;
-
-        if (text && text.trim().length > 0) {
-          sendMessage({ text });
+        if (data.text && data.text.trim()) {
+          sendMessage({ text: data.text });
         }
       };
 
-      mediaRecorder.start();
+      recorder.start();
       setIsRecording(true);
 
-      // Auto-stop in 5 seconds
       setTimeout(() => {
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-          mediaRecorder.stop();
-          setIsRecording(false);
-        }
+        if (recorder.state === "recording") recorder.stop();
+        setIsRecording(false);
       }, 5000);
     } catch (err) {
-      console.error("Voice error: ", err);
+      console.error("Mic permission error:", err);
     }
-  }
+  };
 
-  // -------------------------
-  // STOP RECORDING MANUALLY
-  // -------------------------
-  function stopRecording() {
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-      mediaRecorder.stop();
-      setIsRecording(false);
+  const stopRecording = () => {
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state === "recording") recorder.stop();
+    setIsRecording(false);
+  };
+
+  // Play back last audio note
+  const playAudio = () => {
+    if (lastAudioURL.current) {
+      new Audio(lastAudioURL.current).play();
     }
-  }
-
-  // -------------------------
-  // LOCAL STORAGE + WELCOME MSG
-  // -------------------------
-  useEffect(() => {
-    setIsClient(true);
-    setDurations(stored.durations);
-    setMessages(stored.messages);
-  }, []);
-
-  useEffect(() => {
-    if (isClient) saveMessagesToStorage(messages, durations);
-  }, [messages, durations, isClient]);
-
-  useEffect(() => {
-    if (isClient && initialMessages.length === 0 && !welcomeMessageShownRef.current) {
-      const welcomeMessage: UIMessage = {
-        id: `welcome-${Date.now()}`,
-        role: "assistant",
-        parts: [{ type: "text", text: WELCOME_MESSAGE }],
-      };
-      setMessages([welcomeMessage]);
-      saveMessagesToStorage([welcomeMessage], {});
-      welcomeMessageShownRef.current = true;
-    }
-  }, [isClient, initialMessages.length, setMessages]);
-
-  // -------------------------
-  // REACT HOOK FORM
-  // -------------------------
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: { message: "" },
-  });
-
-  const onSubmit = (data: any) => {
-    sendMessage({ text: data.message });
-    form.reset();
   };
 
   const clearChat = () => {
     setMessages([]);
     setDurations({});
-    saveMessagesToStorage([], {});
+    saveMessages([], {});
     toast.success("Chat cleared");
   };
 
   return (
     <div className="flex h-screen">
       <Sidebar />
-
-      <main className="w-full dark:bg-black h-screen relative flex flex-col">
-        {/* Header */}
+      <main className="flex-1 h-screen relative dark:bg-black">
+        {/* HEADER */}
         <div className="fixed top-0 left-0 right-0 z-50 bg-background pb-16">
           <ChatHeader>
             <ChatHeaderBlock />
@@ -182,10 +173,10 @@ export default function Chat() {
               <Avatar className="size-8 ring-1 ring-primary">
                 <AvatarImage src="/logo.png" />
                 <AvatarFallback>
-                  <Image src="/logo.png" alt="Logo" width={36} height={36} />
+                  <Image src="/logo.png" width={36} height={36} alt="Logo" />
                 </AvatarFallback>
               </Avatar>
-              <p className="tracking-tight">Chat with {AI_NAME}</p>
+              <p>Chat with {AI_NAME}</p>
             </ChatHeaderBlock>
             <ChatHeaderBlock className="justify-end">
               <Button variant="outline" size="sm" onClick={clearChat}>
@@ -196,15 +187,16 @@ export default function Chat() {
           </ChatHeader>
         </div>
 
-        {/* Messages */}
+        {/* MESSAGES */}
         <div className="h-screen overflow-y-auto px-5 py-4 pt-[88px] pb-[150px]">
-          <MessageWall messages={messages} status={status} durations={durations} onDurationChange={(k, v) => {}} />
+          <MessageWall messages={messages} status={status} durations={durations} onDurationChange={() => {}} />
         </div>
 
-        {/* Input Bar */}
+        {/* INPUT + MIC */}
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-background pt-5 pb-3">
           <div className="max-w-3xl mx-auto w-full px-5">
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+
+            <form onSubmit={form.handleSubmit(handleOnSubmit)}>
               <FieldGroup>
                 <Controller
                   name="message"
@@ -213,32 +205,46 @@ export default function Chat() {
                     <Field>
                       <FieldLabel className="sr-only">Message</FieldLabel>
                       <div className="relative">
+
                         <Input
                           {...field}
-                          placeholder="Type a message or use voice…"
+                          placeholder="Type or speak your message…"
                           disabled={status === "streaming"}
-                          className="h-14 pr-28 pl-5 bg-card rounded-[20px]"
-                          autoComplete="off"
+                          className="h-14 pr-32 pl-5 bg-card rounded-[20px]"
                         />
 
-                        {/* Mic Button */}
+                        {/* VOICE BUTTONS */}
                         {!isRecording ? (
-                          <Button type="button" className="absolute right-14 top-2 rounded-full" size="icon" onClick={startRecording}>
+                          <Button type="button" size="icon" className="absolute right-20 top-2 rounded-full"
+                            onClick={startRecording}>
                             <Mic className="size-4" />
                           </Button>
                         ) : (
-                          <Button type="button" className="absolute right-14 top-2 rounded-full bg-red-600 text-white" size="icon" onClick={stopRecording}>
+                          <Button type="button" size="icon" className="absolute right-20 top-2 rounded-full bg-red-600 text-white"
+                            onClick={stopRecording}>
                             <MicOff className="size-4" />
                           </Button>
                         )}
 
-                        {/* Send / Stop Buttons */}
-                        {status === "ready" || status === "error" ? (
-                          <Button type="submit" className="absolute right-3 top-2 rounded-full" size="icon" disabled={!field.value.trim()}>
+                        {/* AUDIO PLAYBACK BUTTON */}
+                        {lastAudioURL.current && (
+                          <Button type="button" size="icon" className="absolute right-14 top-2 rounded-full"
+                            onClick={playAudio}>
+                            <Volume2 className="size-4" />
+                          </Button>
+                        )}
+
+                        {/* SEND BUTTON */}
+                        {(status === "ready" || status === "error") && (
+                          <Button type="submit" size="icon" className="absolute right-3 top-2 rounded-full"
+                            disabled={!field.value.trim()}>
                             <ArrowUp className="size-4" />
                           </Button>
-                        ) : (
-                          <Button type="button" className="absolute right-3 top-2 rounded-full" size="icon" onClick={stop}>
+                        )}
+
+                        {/* STOP STREAM BUTTON */}
+                        {(status === "submitted" || status === "streaming") && (
+                          <Button type="button" size="icon" className="absolute right-3 top-2 rounded-full" onClick={stop}>
                             <Square className="size-4" />
                           </Button>
                         )}
@@ -248,10 +254,11 @@ export default function Chat() {
                 />
               </FieldGroup>
             </form>
-          </div>
 
-          <div className="w-full text-center text-xs text-muted-foreground mt-3">
-            © {new Date().getFullYear()} {OWNER_NAME} • <Link href="/terms">Terms</Link>
+            <div className="text-center text-xs text-muted-foreground mt-3">
+              © {new Date().getFullYear()} {OWNER_NAME} • <Link href="/terms">Terms</Link>
+            </div>
+
           </div>
         </div>
       </main>
