@@ -2,7 +2,6 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { toFile } from "openai/uploads";
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -11,29 +10,28 @@ const client = new OpenAI({
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const audio = formData.get("file") as File;
 
-    if (!file) {
-      return NextResponse.json({ error: "No file received" }, { status: 400 });
+    if (!audio) {
+      return NextResponse.json({ error: "No audio file uploaded" }, { status: 400 });
     }
 
-    // Convert Next.js File → Node Buffer
-    const arrayBuffer = await file.arrayBuffer();
+    // Convert uploaded File → ArrayBuffer → Buffer
+    const arrayBuffer = await audio.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Convert Buffer → Uploadable file the SDK accepts
-    const uploadableFile = await toFile(buffer, "audio.webm");
+    // Create a Node.js File object that OpenAI accepts
+    const nodeFile = new File([buffer], "speech.webm", { type: "audio/webm" });
 
-    // OpenAI speech-to-text
     const transcript = await client.audio.transcriptions.create({
-      file: uploadableFile,
-      model: "gpt-4o-mini-tts",
+      file: nodeFile,
+      model: "gpt-4o-mini-tts", 
       response_format: "text",
     });
 
     return NextResponse.json({ text: transcript }, { status: 200 });
   } catch (err: any) {
-    console.error("Transcription Route Error:", err);
+    console.error("Transcription error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
