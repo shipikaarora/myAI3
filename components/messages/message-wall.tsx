@@ -100,7 +100,7 @@ type MessageWallProps = {
 
 /**
  * MessageWall
- * - Solid background
+ * - No outer rectangle box (messages float on page background)
  * - Different bubbles for user vs assistant
  * - Highlights important assistant messages
  * - Day separators + timestamps
@@ -132,10 +132,10 @@ export function MessageWall({
 
   return (
     <div className="relative max-w-3xl w-full mx-auto">
-      {/* Outer container with solid background */}
-      <div className="relative rounded-3xl bg-background dark:bg-background shadow-sm border border-border px-3 py-4 md:px-5 md:py-6 overflow-hidden">
-        {/* Top soft fade */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-background/90 to-transparent" />
+      {/* No rectangle box wrapper – only padding */}
+      <div className="relative px-3 py-4 md:px-5 md:py-6">
+        {/* Optional soft fade at top – visually subtle, no box */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-background/80 to-transparent" />
 
         <div className="flex flex-col gap-4 relative z-10">
           {messages.map((message, index) => {
@@ -258,7 +258,7 @@ export function MessageWall({
                             key={chip}
                             type="button"
                             variant="outline"
-                            size="sm" // valid size for your Button
+                            size="sm"
                             className="h-6 text-[11px] rounded-full border-slate-300/70 dark:border-slate-600/70 bg-white/70 dark:bg-slate-900/70 px-3"
                             onClick={() => onQuickReply(chip)}
                           >
@@ -285,8 +285,8 @@ export function MessageWall({
           <div ref={endRef} />
         </div>
 
-        {/* Bottom soft fade */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background/90 to-transparent" />
+        {/* Bottom soft fade – also subtle, no box */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background/80 to-transparent" />
       </div>
     </div>
   );
