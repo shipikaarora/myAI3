@@ -177,7 +177,7 @@ export default function Chat() {
               <ChatHeaderBlock className="justify-end">
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="l"
                   className="cursor-pointer"
                   onClick={clearChat}
                 >
