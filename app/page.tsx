@@ -23,6 +23,7 @@ import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config"
 import Image from "next/image";
 import Link from "next/link";
 import { Sidebar } from "@/app/components/Sidebar";
+import { BadgeIndianRupee, FileText, ScrollText } from "lucide-react";
 const formSchema = z.object({
   message: z
     .string()
@@ -119,124 +120,67 @@ export default function Chat() {
     saveMessagesToStorage(newMessages, newDurations);
     toast.success("Chat cleared");
   }
-  return (
-    <div className="flex h-screen">
-  <Sidebar />
-  <div className="flex-1 flex flex-col">
-    {/* baaki sab same rahega */}
+ return (
+  <div className="flex h-screen font-sans bg-gradient-to-br from-orange-50 via-white to-green-50">
+    
+    {/* ←←← OFFICIAL TRICOLOR TOP BAR */}
+    <div className="fixed top-0 left-0 right-0 z-50 h-24 bg-gradient-to-r from-orange-500 via-white to-green-500 shadow-2xl flex items-center justify-center gap-8">
+      <img src="/ashoka.png" alt="Ashoka Chakra" className="w-16 h-16 animate-spin-slow" />
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-blue-900 drop-shadow-lg">उद्योग मित्र</h1>
+        <p className="text-lg font-bold text-blue-800">Udyog Mitra – आपका MSME साथी</p>
+      </div>
+      <img src="/ashoka.png" alt="Ashoka Chakra" className="w-16 h-16 animate-spin-slow" />
     </div>
-      <main className="w-full dark:bg-black h-screen relative">
-        <div className="fixed top-0 left-0 right-0 z-50 bg-linear-to-b from-background via-background/50 to-transparent dark:bg-black overflow-visible pb-16">
-          <div className="relative overflow-visible">
-            <ChatHeader>
-              <ChatHeaderBlock />
-              <ChatHeaderBlock className="justify-center items-center">
-                <Avatar
-                  className="size-8 ring-1 ring-primary"
-                >
-                  <AvatarImage src="/logo.png" />
-                  <AvatarFallback>
-                    <Image src="/logo.png" alt="Logo" width={36} height={36} />
-                  </AvatarFallback>
-                </Avatar>
-                <p className="tracking-tight">Chat with {AI_NAME}</p>
-              </ChatHeaderBlock>
-              <ChatHeaderBlock className="justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="cursor-pointer"
-                  onClick={clearChat}
-                >
-                  <Plus className="size-4" />
-                  {CLEAR_CHAT_TEXT}
-                </Button>
-              </ChatHeaderBlock>
-            </ChatHeader>
-          </div>
+
+    {/* Sidebar + Chat (tumhara purana wala) */}
+    <Sidebar />
+    <div className="flex-1 flex flex-col pt-24">
+      <main className="flex-1 relative overflow-hidden bg-white/90">
+        <div className="fixed top-24 left-0 right-0 z-40 bg-orange-100 border-b-4 border-orange-400 shadow-lg">
+          <ChatHeader>
+            <ChatHeaderBlock className="justify-center gap-3">
+              <BadgeIndianRupee className="size-8 text-orange-700" />
+              <p className="text-xl font-bold text-orange-900">MSME सहायता केंद्र</p>
+            </ChatHeaderBlock>
+          </ChatHeader>
         </div>
-        <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px]">
-          <div className="flex flex-col items-center justify-end min-h-full">
+
+        <div className="h-full overflow-y-auto px-5 py-4 pt-20 pb-40">
+          <div className="max-w-4xl mx-auto">
             {isClient ? (
               <>
                 <MessageWall messages={messages} status={status} durations={durations} onDurationChange={handleDurationChange} />
-                {status === "submitted" && (
-                  <div className="flex justify-start max-w-3xl w-full">
-                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                  </div>
-                )}
               </>
             ) : (
-              <div className="flex justify-center max-w-2xl w-full">
-                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              <div className="flex justify-center py-32">
+                <Loader2 className="size-12 animate-spin text-orange-600" />
               </div>
             )}
           </div>
         </div>
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black overflow-visible pt-13">
-          <div className="w-full px-5 pt-5 pb-1 items-center flex justify-center relative overflow-visible">
-            <div className="message-fade-overlay" />
-            <div className="max-w-3xl w-full">
-              <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
-                <FieldGroup>
-                  <Controller
-                    name="message"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="chat-form-message" className="sr-only">
-                          Message
-                        </FieldLabel>
-                        <div className="relative h-13">
-                          <Input
-                            {...field}
-                            id="chat-form-message"
-                            className="h-15 pr-15 pl-5 bg-card rounded-[20px]"
-                            placeholder="Type your message here..."
-                            disabled={status === "streaming"}
-                            aria-invalid={fieldState.invalid}
-                            autoComplete="off"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                form.handleSubmit(onSubmit)();
-                              }
-                            }}
-                          />
-                          {(status == "ready" || status == "error") && (
-                            <Button
-                              className="absolute right-3 top-3 rounded-full"
-                              type="submit"
-                              disabled={!field.value.trim()}
-                              size="icon"
-                            >
-                              <ArrowUp className="size-4" />
-                            </Button>
-                          )}
-                          {(status == "streaming" || status == "submitted") && (
-                            <Button
-                              className="absolute right-2 top-2 rounded-full"
-                              size="icon"
-                              onClick={() => {
-                                stop();
-                              }}
-                            >
-                              <Square className="size-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </Field>
-                    )}
-                  />
-                </FieldGroup>
-              </form>
-            </div>
-          </div>
-          <div className="w-full px-5 py-3 items-center flex justify-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {OWNER_NAME}&nbsp;<Link href="/terms" className="underline">Terms of Use</Link>&nbsp;Powered by&nbsp;<Link href="https://ringel.ai/" className="underline">Ringel.AI</Link>
+
+        {/* Input Box */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-orange-100 to-transparent p-5">
+          <div className="max-w-4xl mx-auto">
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="relative">
+                <Input
+                  {...form.register("message")}
+                  placeholder="यहाँ अपना सवाल पूछें... उदाहरण: Udyam Registration कैसे करें?"
+                  className="h-16 pl-6 pr-20 text-lg rounded-full shadow-2xl border-4 border-orange-400 focus:border-orange-600 bg-white"
+                />
+                <Button
+                  type="submit"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full size-14 bg-orange-600 hover:bg-orange-700"
+                >
+                  <ArrowUp className="size-8" />
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       </main>
-    </div >
-  );
-}
+    </div>
+  </div>
+);
