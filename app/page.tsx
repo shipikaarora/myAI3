@@ -23,6 +23,7 @@ import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config"
 import Image from "next/image";
 import Link from "next/link";
 import { Sidebar } from "@/app/components/Sidebar";
+import { QuickButtons } from "@/app/components/QuickButtons";
 const formSchema = z.object({
   message: z
     .string()
@@ -159,6 +160,26 @@ export default function Chat() {
           <div className="flex flex-col items-center justify-end min-h-full">
             {isClient ? (
               <>
+                {isClient ? (
+  <>
+    {/* YE NA NAYA CODE YAHAN */}
+    {isClient && messages.length === 0 && (
+      <QuickButtons
+        onClick={(question) => {
+          form.setValue("message", question);
+          form.handleSubmit(onSubmit)();
+        }}
+      />
+    )}
+
+    <MessageWall messages={messages} status={status} durations={durations} onDurationChange={handleDurationChange} />
+    {status === "submitted" && (
+      <div className="flex justify-start">
+        <Loader2 className="size-5 animate-spin text-orange-600" />
+      </div>
+    )}
+  </>
+) : (
                 <MessageWall messages={messages} status={status} durations={durations} onDurationChange={handleDurationChange} />
                 {status === "submitted" && (
                   <div className="flex justify-start max-w-3xl w-full">
