@@ -3,7 +3,7 @@ import { Response } from "@/components/ai-elements/response";
 import { ReasoningPart } from "./reasoning-part";
 import { ToolCall, ToolResult } from "./tool-call";
 
-type Props = {
+type AssistantMessageProps = {
   message: UIMessage;
   status?: string;
   isLastMessage?: boolean;
@@ -12,9 +12,8 @@ type Props = {
 };
 
 /**
- * Renders the ASSISTANT content (text, reasoning, tools).
- * NOTE: This component does NOT render bubble/background.
- * Bubble styling is handled in MessageWall.
+ * Renders ASSISTANT content (text, reasoning, tool calls/results).
+ * Bubble/background is handled by MessageWall, not here.
  */
 export function AssistantMessage({
   message,
@@ -22,7 +21,7 @@ export function AssistantMessage({
   isLastMessage,
   durations = {},
   onDurationChange,
-}: Props) {
+}: AssistantMessageProps) {
   return (
     <div className="text-sm flex flex-col gap-3 whitespace-pre-wrap leading-relaxed">
       {message.parts.map((part, i) => {
