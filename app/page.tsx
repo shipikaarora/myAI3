@@ -22,6 +22,7 @@ import { useEffect, useState, useRef } from "react";
 import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config";
 import Image from "next/image";
 import Link from "next/link";
+import { Sidebar } from "@/app/components/Sidebar";
 const formSchema = z.object({
   message: z
     .string()
@@ -119,7 +120,11 @@ export default function Chat() {
     toast.success("Chat cleared");
   }
   return (
-    <div className="flex h-screen items-center justify-center font-sans dark:bg-black">
+    <div className="flex h-screen">
+  <Sidebar />
+  <div className="flex-1 flex flex-col">
+    {/* baaki sab same rahega */}
+    </div>
       <main className="w-full dark:bg-black h-screen relative">
         <div className="fixed top-0 left-0 right-0 z-50 bg-linear-to-b from-background via-background/50 to-transparent dark:bg-black overflow-visible pb-16">
           <div className="relative overflow-visible">
