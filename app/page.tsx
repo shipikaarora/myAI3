@@ -172,12 +172,14 @@ export default function Chat() {
       priority
     />
   </div>
-  <p className="tracking-tight">Chat with {AI_NAME}</p>
-</ChatHeaderBlock>
+<p className="tracking-tight text-xl font-medium text-maroon-600">
+  Chat with {AI_NAME}
+</p>
+             </ChatHeaderBlock>
               <ChatHeaderBlock className="justify-end">
                 <Button
                   variant="outline"
-                  size="l"
+                  size="sm"
                   className="cursor-pointer"
                   onClick={clearChat}
                 >
