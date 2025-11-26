@@ -4,7 +4,7 @@ export function Sidebar() {
       <div className="text-center">
         {/* This line shows your new logo without any circle */}
         <img 
-          src="/logo.png" 
+          src="/ashoka.png" 
           alt="Udyog Mitra" 
           className="w-32 h-32 mx-auto mb-4 object-contain"
         />
