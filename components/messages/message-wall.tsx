@@ -1,9 +1,10 @@
 import { UIMessage } from "ai";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
 import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { ReactNode } from "react";
 
 const IMPORTANT_KEYWORDS = [
   "eligible",
@@ -99,7 +100,7 @@ type MessageWallProps = {
 
 /**
  * MessageWall
- * - Solid background (no gradient)
+ * - Solid background
  * - Different bubbles for user vs assistant
  * - Highlights important assistant messages
  * - Day separators + timestamps
@@ -113,7 +114,6 @@ export function MessageWall({
   onQuickReply,
 }: MessageWallProps) {
   const endRef = useRef<HTMLDivElement>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -153,7 +153,7 @@ export function MessageWall({
             const isLastAssistant = index === lastAssistantIndex;
 
             // Day separator
-            let daySeparator: JSX.Element | null = null;
+            let daySeparator: ReactNode = null;
             if (msgDate) {
               const currentDayLabel = formatDayLabel(msgDate);
               if (currentDayLabel !== lastDayLabel) {
@@ -184,11 +184,7 @@ export function MessageWall({
               <div key={message.id}>
                 {daySeparator}
 
-                <div
-                  className={`flex w-full ${rowClass}`}
-                  onMouseEnter={() => setHoveredId(message.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                >
+                <div className={`flex w-full ${rowClass}`}>
                   <div
                     className={`
                       max-w-[80%] rounded-2xl px-4 py-3
