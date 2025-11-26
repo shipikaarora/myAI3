@@ -60,6 +60,22 @@ const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, 
   }
 };
 export default function Chat() {
+    // ←←← WELCOME MUSIC – plays only once when page loads
+  useEffect(() => {
+    const audio = new Audio("/welcome-music.mp3");
+    audio.volume = 0.4; // soft volume
+    audio.play().catch(() => {}); // ignore if browser blocks autoplay
+
+    // Stop after 5 seconds (or change to your track length)
+    const timer = setTimeout(() => {
+      audio.pause();
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer);
+      audio.pause();
+    };
+  }, []);
   const [isClient, setIsClient] = useState(false);
   const [durations, setDurations] = useState<Record<string, number>>({});
   const welcomeMessageShownRef = useRef<boolean>(false);
