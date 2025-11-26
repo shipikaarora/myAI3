@@ -1,13 +1,27 @@
 import { UIMessage } from "ai";
+import { Response } from "@/components/ai-elements/response";
 
-export function UserMessage({ message }: { message: UIMessage }) {
-  const text =
-    message.parts?.map((p) => (p.type === "text" ? p.text : "")).join(" ") ||
-    "";
+type Props = {
+  message: UIMessage;
+};
 
+/**
+ * Renders the USER content only.
+ * Bubble/background is handled in MessageWall.
+ */
+export function UserMessage({ message }: Props) {
   return (
-    <div className="whitespace-pre-wrap leading-relaxed text-[15px] text-white">
-      {text}
+    <div className="text-sm whitespace-pre-wrap leading-relaxed">
+      {message.parts.map((part, i) => {
+        if (part.type === "text") {
+          return (
+            <Response key={`${message.id}-${i}`}>
+              {part.text}
+            </Response>
+          );
+        }
+        return null;
+      })}
     </div>
   );
 }
