@@ -121,7 +121,7 @@ export default function Chat() {
     toast.success("Chat cleared");
   }
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-orange-50" style={{ backgroundImage: 'url(/bg-pattern.png)', backgroundRepeat: 'repeat', backgroundSize: '400px' }}>
   <Sidebar />
   <div className="flex-1 flex flex-col">
     {/* baaki sab same rahega */}
