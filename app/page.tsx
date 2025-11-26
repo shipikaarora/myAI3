@@ -60,22 +60,37 @@ const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, 
   }
 };
 export default function Chat() {
-    // ←←← WELCOME MUSIC – plays only once when page loads
-  useEffect(() => {
-    const audio = new Audio("/welcome-music.mp3");
-    audio.volume = 0.4; // soft volume
-    audio.play().catch(() => {}); // ignore if browser blocks autoplay
+  // WELCOME MUSIC – 100% working (plays on first click/tap)
+  const [hasPlayedMusic, setHasPlayedMusic] = useState(false);
 
-    // Stop after 5 seconds (or change to your track length)
-    const timer = setTimeout(() => {
-      audio.pause();
-    }, 5000);
+  useEffect(() => {
+    if (hasPlayedMusic) return;
+
+    const playMusic = () => {
+      if (hasPlayedMusic) return;
+      
+      const audio = new Audio("/welcome-music.mp3");
+      audio.volume = 0.5;
+      audio.play().catch(() => {}); // ignore any error
+      
+      setTimeout(() => audio.pause(), 6000); // 6 seconds
+      setHasPlayedMusic(true);
+    };
+
+    const handleFirstClick = () => {
+      playMusic();
+      document.removeEventListener("click", handleFirstClick);
+      document.removeEventListener("touchstart", handleFirstClick);
+    };
+
+    document.addEventListener("click", handleFirstClick);
+    document.addEventListener("touchstart", handleFirstClick);
 
     return () => {
-      clearTimeout(timer);
-      audio.pause();
+      document.removeEventListener("click", handleFirstClick);
+      document.removeEventListener("touchstart", handleFirstClick);
     };
-  }, []);
+  }, [hasPlayedMusic]);
   const [isClient, setIsClient] = useState(false);
   const [durations, setDurations] = useState<Record<string, number>>({});
   const welcomeMessageShownRef = useRef<boolean>(false);
