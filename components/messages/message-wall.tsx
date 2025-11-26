@@ -1,10 +1,10 @@
-import { UIMessage } from "ai";
+import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
+import type { UIMessage } from "ai";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
 import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { ReactNode } from "react";
 
 const IMPORTANT_KEYWORDS = [
   "eligible",
@@ -258,8 +258,8 @@ export function MessageWall({
                             key={chip}
                             type="button"
                             variant="outline"
-                            size="xs"
-                            className="h-6 text-[11px] rounded-full border-slate-300/70 dark:border-slate-600/70 bg-white/70 dark:bg-slate-900/70"
+                            size="sm" // valid size for your Button
+                            className="h-6 text-[11px] rounded-full border-slate-300/70 dark:border-slate-600/70 bg-white/70 dark:bg-slate-900/70 px-3"
                             onClick={() => onQuickReply(chip)}
                           >
                             {chip}
