@@ -73,7 +73,7 @@ export default function Chat() {
       audio.volume = 0.5;
       audio.play().catch(() => {}); // ignore any error
       
-      setTimeout(() => audio.pause(), 6000); // 6 seconds
+      setTimeout(() => audio.pause(), 30000); // 30 seconds
       setHasPlayedMusic(true);
     };
 
