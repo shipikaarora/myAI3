@@ -1,15 +1,15 @@
 import { UIMessage } from "ai";
 import { Response } from "@/components/ai-elements/response";
 
-type Props = {
+type UserMessageProps = {
   message: UIMessage;
 };
 
 /**
- * Renders the USER content only.
- * Bubble/background is handled in MessageWall.
+ * Renders USER content only.
+ * Bubble/background is handled by MessageWall.
  */
-export function UserMessage({ message }: Props) {
+export function UserMessage({ message }: UserMessageProps) {
   return (
     <div className="text-sm whitespace-pre-wrap leading-relaxed">
       {message.parts.map((part, i) => {
