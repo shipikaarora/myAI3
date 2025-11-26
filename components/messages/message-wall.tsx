@@ -2,158 +2,124 @@ import { UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
-import { Copy, Volume2, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Info } from "lucide-react";
 
-// Keywords for “important” messages
 const IMPORTANT_KEYWORDS = [
   "eligible",
   "not eligible",
   "important",
   "warning",
-  "note:",
-  "note -",
-  "required",
+  "note",
   "must",
+  "required",
   "deadline",
-  "action needed",
   "critical",
-  "approved",
+  "attention",
   "rejected",
-  "attention"
+  "approved",
+  "documents",
+  "action needed",
 ];
 
+function getPlainText(message: UIMessage): string {
+  return (
+    message.parts
+      ?.map((p) => (p.type === "text" ? p.text : ""))
+      .join(" ") || ""
+  );
+}
+
+type Props = {
+  messages: UIMessage[];
+  status?: string;
+  durations?: Record<string, number>;
+  onDurationChange?: (key: string, duration: number) => void;
+};
+
+/**
+ * Main chat wall:
+ * - Handles bubble layout & colours
+ * - Scrolls to bottom on new message
+ * - Highlights important assistant messages
+ */
 export function MessageWall({
   messages,
   status,
   durations,
   onDurationChange,
-  lastBotAudioURL,
-}: {
-  messages: UIMessage[];
-  status?: string;
-  durations?: Record<string, number>;
-  onDurationChange?: (key: string, duration: number) => void;
-  lastBotAudioURL?: string | null;
-}) {
+}: Props) {
   const endRef = useRef<HTMLDivElement>(null);
-  const [hover, setHover] = useState<string | null>(null);
-
-  const scrollToBottom = () => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   useEffect(() => {
-    scrollToBottom();
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const copyMessage = (text: string) => navigator.clipboard.writeText(text);
-
-  const playAudio = () => {
-    if (lastBotAudioURL) new Audio(lastBotAudioURL).play();
-  };
-
-  const isImportant = (text: string) =>
-    IMPORTANT_KEYWORDS.some(k => text.toLowerCase().includes(k));
-
   return (
-    <div className="relative max-w-3xl mx-auto w-full px-3">
-      
-      {/* Top gradient */}
-      <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent z-10" />
+    <div className="relative max-w-3xl w-full mx-auto px-3">
+      {/* Soft top fade */}
+      <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent pointer-events-none z-10" />
 
       <div className="flex flex-col gap-6 py-4">
+        {messages.map((message, index) => {
+          const isAssistant = message.role === "assistant";
+          const plainText = getPlainText(message);
+          const isImportant =
+            isAssistant &&
+            IMPORTANT_KEYWORDS.some((k) =>
+              plainText.toLowerCase().includes(k)
+            );
 
-        {messages.map((msg, index) => {
-          const isAssistant = msg.role === "assistant";
-          const textContent =
-            msg.parts?.map((p) => (p.type === "text" ? p.text : "")).join(" ") || "";
+          // bubble colour classes
+          const baseClasses = isAssistant
+            ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-50 border border-slate-200/70 dark:border-slate-700/70"
+            : "bg-indigo-500 text-white shadow-md";
 
-          const important = isImportant(textContent);
+          const importantClasses = isImportant
+            ? "border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-900 text-black dark:text-yellow-100 shadow-lg"
+            : "";
 
           return (
             <div
-              key={msg.id}
-              className="relative group animate-fade-slide"
-              onMouseEnter={() => setHover(msg.id)}
-              onMouseLeave={() => setHover(null)}
+              key={message.id}
+              className={`flex w-full ${
+                isAssistant ? "justify-start" : "justify-end"
+              }`}
+              onMouseEnter={() => setHoveredId(message.id)}
+              onMouseLeave={() => setHoveredId(null)}
             >
-              {/* CHAT BUBBLE */}
               <div
                 className={`
-                  px-5 py-3 rounded-2xl w-fit max-w-[90%]
-                  transition-all shadow-sm backdrop-blur-sm
-
-                  ${isAssistant
-                    ? "bg-[#f1f5f9] dark:bg-[#1f2937] border border-border text-foreground"
-                    : "ml-auto bg-[#6366f1] text-white shadow-md"
-                  }
-
-                  ${important && isAssistant
-                    ? "border border-yellow-500 bg-yellow-100 dark:bg-yellow-900 text-black dark:text-yellow-100 shadow-lg"
-                    : ""
-                  }
+                  max-w-[80%] rounded-2xl px-4 py-3 shadow-sm backdrop-blur-sm
+                  ${baseClasses} ${importantClasses}
                 `}
               >
-                {/* Highlight header for important messages */}
-                {important && isAssistant && (
-                  <div className="flex items-center gap-1 mb-1 text-yellow-700 dark:text-yellow-200 font-semibold">
-                    <Info className="h-4 w-4" />
+                {isImportant && (
+                  <div className="flex items-center gap-1 mb-1 text-xs font-semibold text-yellow-700 dark:text-yellow-200">
+                    <Info className="h-3 w-3" />
                     Important
                   </div>
                 )}
 
-                {/* Underline important parts inside text */}
-                <div className={important ? "underline underline-offset-4" : ""}>
+                <div className={isImportant ? "underline underline-offset-4" : ""}>
                   {isAssistant ? (
                     <AssistantMessage
-                      message={msg}
+                      message={message}
                       status={status}
                       isLastMessage={index === messages.length - 1}
                       durations={durations}
                       onDurationChange={onDurationChange}
                     />
                   ) : (
-                    <UserMessage message={msg} />
+                    <UserMessage message={message} />
                   )}
                 </div>
               </div>
-
-              {/* HOVER TOOLBAR */}
-              {hover === msg.id && (
-                <div
-                  className={`absolute -top-3 ${
-                    isAssistant ? "left-2" : "right-2"
-                  } flex gap-1`}
-                >
-                  {/* Copy */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 rounded-full shadow bg-background/70 border"
-                    onClick={() => copyMessage(textContent)}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-
-                  {/* Replay Voice */}
-                  {isAssistant && lastBotAudioURL && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 rounded-full shadow bg-background/70 border"
-                      onClick={playAudio}
-                    >
-                      <Volume2 className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}
 
-        {/* Typing dots */}
+        {/* Typing indicator */}
         {status === "submitted" && (
           <div className="flex items-center gap-2 pl-2">
             <span className="w-2 h-2 bg-primary rounded-full animate-bounce" />
@@ -165,7 +131,7 @@ export function MessageWall({
         <div ref={endRef} />
       </div>
 
-      {/* Bottom gradient */}
+      {/* Soft bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />
     </div>
   );
