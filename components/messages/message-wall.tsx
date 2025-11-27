@@ -1,8 +1,11 @@
-import { useEffect, useRef, type ReactNode } from "react";
+// components/messages/message-wall.tsx
+
+import type { ReactNode } from "react";
 import type { UIMessage } from "ai";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
 import { Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const IMPORTANT_KEYWORDS = [
   "eligible",
@@ -93,15 +96,17 @@ type MessageWallProps = {
   status?: string;
   durations?: Record<string, number>;
   onDurationChange?: (key: string, duration: number) => void;
+  // onQuickReply is kept optional for future, but we don't render chips anymore
+  onQuickReply?: (text: string) => void;
 };
 
 /**
  * MessageWall
- * - Chat bubbles for user vs assistant
+ * - No internal auto-scroll (scroll is handled in page.tsx)
+ * - Different bubbles for user vs assistant
  * - Highlights important assistant messages
  * - Day separators + timestamps
- * - Optional checklist if assistant outputs “Action items”
- * - No quick-reply chips
+ * - Optional checklist extraction
  */
 export function MessageWall({
   messages,
@@ -109,34 +114,37 @@ export function MessageWall({
   durations,
   onDurationChange,
 }: MessageWallProps) {
-  const endRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  // find global index of last assistant message (in case you want to style it)
+  const lastAssistantIndexReversed = [...messages].reverse().findIndex(
+    (m) => m.role === "assistant",
+  );
+  const lastAssistantIndex =
+    lastAssistantIndexReversed === -1
+      ? -1
+      : messages.length - 1 - lastAssistantIndexReversed;
 
   let lastDayLabel: string | null = null;
 
-  // FULL WIDTH inside the card
   return (
-    <div className="relative w-full">
+    <div className="relative mx-auto w-full max-w-3xl">
       <div className="relative px-3 py-4 md:px-5 md:py-6">
-        {/* soft fade at top */}
+        {/* Soft fade at top */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-background/80 to-transparent" />
 
         <div className="relative z-10 flex flex-col gap-4">
-          {messages.map((message) => {
+          {messages.map((message, index) => {
             const isAssistant = message.role === "assistant";
             const plainText = getPlainText(message);
             const isImportant =
               isAssistant &&
               IMPORTANT_KEYWORDS.some((k) =>
-                plainText.toLowerCase().includes(k)
+                plainText.toLowerCase().includes(k),
               );
 
             const checklistItems = extractChecklist(plainText);
             const msgDate = getMessageDate(message);
             const timeLabel = formatTimeLabel(msgDate);
+            const _isLastAssistant = index === lastAssistantIndex;
 
             // Day separator
             let daySeparator: ReactNode = null;
@@ -171,7 +179,7 @@ export function MessageWall({
                 <div className={`flex w-full ${rowClass}`}>
                   <div
                     className={`
-                      w-full max-w-[95%] rounded-2xl px-4 py-3
+                      max-w-[80%] rounded-2xl px-4 py-3
                       backdrop-blur-sm transition-all duration-150
                       ${baseBubbleClass} ${importantClass}
                     `}
@@ -186,15 +194,13 @@ export function MessageWall({
 
                     {/* Main content */}
                     <div
-                      className={
-                        isImportant ? "underline underline-offset-4" : ""
-                      }
+                      className={isImportant ? "underline underline-offset-4" : ""}
                     >
                       {isAssistant ? (
                         <AssistantMessage
                           message={message}
                           status={status}
-                          isLastMessage={false}
+                          isLastMessage={index === messages.length - 1}
                           durations={durations}
                           onDurationChange={onDurationChange}
                         />
@@ -205,7 +211,7 @@ export function MessageWall({
 
                     {/* Checklist (optional) */}
                     {checklistItems.length > 0 && (
-                      <div className="mt-3 rounded-xl border border-slate-200/70 bg-white/80 px-3 py-2 text-xs text-slate-700 dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200">
+                      <div className="mt-3 rounded-xl border border-slate-200/70 bg-white/80 px-3 py-2 text-xs text-slate-700 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200">
                         <div className="mb-1 font-semibold">Action items</div>
                         <ul className="space-y-1">
                           {checklistItems.map((item, idx) => (
@@ -242,10 +248,11 @@ export function MessageWall({
             </div>
           )}
 
-          <div ref={endRef} />
+          {/* Spacer at bottom */}
+          <div />
         </div>
 
-        {/* Bottom fade */}
+        {/* Bottom soft fade */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background/80 to-transparent" />
       </div>
     </div>
