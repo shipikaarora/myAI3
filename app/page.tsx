@@ -85,7 +85,7 @@ const saveMessagesToStorage = (
     const data: StorageData = { messages, durations };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error("Failed to save messages from localStorage:", error);
+    console.error("Failed to save messages to localStorage:", error);
   }
 };
 
@@ -161,17 +161,17 @@ export default function Chat() {
     }));
   };
 
-  // Scroll handling refs
+  // Scroll handling
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
   const [showScrollDown, setShowScrollDown] = useState(false);
 
   // Auto-scroll to bottom whenever messages or status change
   useEffect(() => {
-    if (!scrollContainerRef.current) return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
 
-    scrollContainerRef.current.scrollTo({
-      top: scrollContainerRef.current.scrollHeight,
+    el.scrollTo({
+      top: el.scrollHeight,
       behavior: "smooth",
     });
   }, [messages, status]);
@@ -253,7 +253,7 @@ export default function Chat() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
+      className="h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
       style={{
         backgroundImage:
           "linear-gradient(to bottom right, #FFF5EC, #FFE7D1, #FFFDF8), url(/bg-pattern.png)",
@@ -261,9 +261,9 @@ export default function Chat() {
         backgroundSize: "auto, 360px",
       }}
     >
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-row">
+      <div className="mx-auto flex h-full max-w-6xl flex-row">
         {/* SIDEBAR */}
-        <aside className="hidden h-screen w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
+        <aside className="hidden h-full w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
               <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white shadow-md">
@@ -314,9 +314,10 @@ export default function Chat() {
         </aside>
 
         {/* MAIN CHAT AREA */}
-        <main className="flex flex-1 items-stretch px-3 py-4 md:px-6 md:py-6">
+        <main className="flex h-full flex-1 items-stretch px-3 py-4 md:px-6 md:py-6">
           <div className="flex h-full w-full flex-col items-center">
-            <div className="relative flex h-[calc(100vh-4rem)] w-full max-w-3xl flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
+            {/* CARD */}
+            <div className="relative flex h-full w-full max-w-3xl flex-1 flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
               {/* HEADER */}
               <header className="flex items-center justify-between border-b border-orange-100 px-4 py-3 md:px-6 md:py-4">
                 <div className="flex items-center gap-3">
@@ -362,12 +363,11 @@ export default function Chat() {
                 </div>
               </header>
 
-              {/* HERO SLIDES + MESSAGES */}
-              <div className="relative flex min-h-0 flex-1 overflow-hidden">
-                {/* Scrollable content */}
+              {/* HERO + MESSAGES AREA */}
+              <div className="relative flex flex-1 min-h-0 overflow-hidden">
                 <div
                   ref={scrollContainerRef}
-                  className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
+                  className="flex flex-1 min-h-0 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
                   onScroll={(e) => {
                     const el = e.currentTarget;
                     const atBottom =
@@ -419,7 +419,7 @@ export default function Chat() {
                   )}
 
                   {/* MESSAGES */}
-                  <div className="flex min-h-0 flex-1 flex-col items-center justify-end">
+                  <div className="flex flex-1 min-h-0 flex-col items-center justify-end">
                     {isClient ? (
                       <>
                         <MessageWall
@@ -428,7 +428,6 @@ export default function Chat() {
                           durations={durations}
                           onDurationChange={handleDurationChange}
                         />
-                        {/* Typing indicator */}
                         {status === "submitted" && (
                           <div className="mt-2 flex w-full max-w-xs items-center gap-2 rounded-2xl bg-orange-50 px-3 py-2 text-[11px] text-orange-700 shadow-sm">
                             <div className="flex gap-1">
@@ -445,7 +444,6 @@ export default function Chat() {
                         <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
                       </div>
                     )}
-                    <div ref={bottomRef} />
                   </div>
                 </div>
 
@@ -453,12 +451,14 @@ export default function Chat() {
                 {showScrollDown && (
                   <button
                     type="button"
-                    onClick={() =>
-                      scrollContainerRef.current?.scrollTo({
-                        top: scrollContainerRef.current.scrollHeight,
+                    onClick={() => {
+                      const el = scrollContainerRef.current;
+                      if (!el) return;
+                      el.scrollTo({
+                        top: el.scrollHeight,
                         behavior: "smooth",
-                      })
-                    }
+                      });
+                    }}
                     className="absolute bottom-24 right-4 rounded-full bg-slate-900/80 px-3 py-1 text-[11px] text-white shadow-lg"
                   >
                     Jump to latest
@@ -486,7 +486,7 @@ export default function Chat() {
                               {...field}
                               id="chat-form-message"
                               className="h-12 rounded-full bg-orange-50/80 pr-14 pl-4 text-sm placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-300"
-                              placeholder="Type your question… e.g., “Can I get CGTMSE for a ₹20L machinery loan?”"
+                              placeholder='Type your question… e.g., "Can I get CGTMSE for a ₹20L machinery loan?"'
                               disabled={status === "streaming"}
                               aria-invalid={fieldState.invalid}
                               autoComplete="off"
