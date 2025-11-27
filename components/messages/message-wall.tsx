@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type { UIMessage } from "ai";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
@@ -137,14 +137,14 @@ export function MessageWall({
             const timeLabel = formatTimeLabel(msgDate);
 
             // Day separator
-            let daySeparator: JSX.Element | null = null;
+            let daySeparator: ReactNode = null;
             if (msgDate) {
               const currentDayLabel = formatDayLabel(msgDate);
               if (currentDayLabel !== lastDayLabel) {
                 lastDayLabel = currentDayLabel;
                 daySeparator = (
                   <div className="my-2 flex justify-center">
-                    <div className="rounded-full bg-slate-200/70 px-3 py-1 text-[11px] text-slate-600 dark:bg-slate-800/80 dark:text-slate-300 shadow-sm">
+                    <div className="rounded-full bg-slate-200/70 px-3 py-1 text-[11px] text-slate-600 shadow-sm dark:bg-slate-800/80 dark:text-slate-300">
                       {currentDayLabel}
                     </div>
                   </div>
@@ -155,11 +155,11 @@ export function MessageWall({
             const rowClass = isAssistant ? "justify-start" : "justify-end";
 
             const baseBubbleClass = isAssistant
-              ? "bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-slate-50 border border-slate-200/80 dark:border-slate-700/70"
+              ? "bg-slate-50/90 text-slate-900 border border-slate-200/80 dark:bg-slate-800 dark:text-slate-50 dark:border-slate-700/70"
               : "bg-indigo-500 text-white shadow-md";
 
             const importantClass = isImportant
-              ? "border-2 border-yellow-500 bg-yellow-50/95 dark:bg-yellow-900 text-black dark:text-yellow-100 shadow-lg"
+              ? "border-2 border-yellow-500 bg-yellow-50/95 text-black shadow-lg dark:bg-yellow-900 dark:text-yellow-100"
               : "";
 
             return (
