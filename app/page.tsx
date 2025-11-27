@@ -21,6 +21,12 @@ import {
   FileText,
   Landmark,
   Scale,
+  Menu,
+  X,
+  User,
+  Clock,
+  Flag,
+  Settings,
 } from "lucide-react";
 import { MessageWall } from "@/components/messages/message-wall";
 
@@ -169,7 +175,7 @@ export default function Chat() {
       !welcomeMessageShownRef.current
     ) {
       const welcomeMessage: UIMessage = {
-        id: `welcome-${Date.now()}`, // ✅ fixed template string
+        id: `welcome-${Date.now()}`,
         role: "assistant",
         parts: [
           {
@@ -210,6 +216,7 @@ export default function Chat() {
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [showScrollDown, setShowScrollDown] = useState(false);
 
+  // Always scroll to bottom when new messages / status change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, status]);
@@ -244,65 +251,132 @@ export default function Chat() {
     },
   ];
 
+  // =======================
+  //  Slide-out NAV state
+  // =======================
+
+  const [navOpen, setNavOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-app-gradient">
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-row gap-4 px-3 py-4 md:px-6 md:py-6">
-        {/* SIDEBAR */}
-        <aside className="hidden h-full w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex rounded-3xl">
-          <div className="flex flex-col items-center gap-3">
+    <div className="min-h-screen bg-app-gradient relative">
+      {/* LEFT POP NAV – TRIGGER BUTTON */}
+      <button
+        type="button"
+        onClick={() => setNavOpen((prev) => !prev)}
+        className="fixed left-3 top-4 z-40 flex h-9 w-9 items-center justify-center rounded-full border border-orange-200 bg-white/90 text-orange-700 shadow-md hover:bg-orange-50 md:left-4 md:top-6"
+        aria-label="Open navigation"
+      >
+        <Menu className="h-4 w-4" />
+      </button>
+
+      {/* DARK OVERLAY (for mobile / small screens) */}
+      {navOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation overlay"
+          className="fixed inset-0 z-30 bg-slate-900/40 md:hidden"
+          onClick={() => setNavOpen(false)}
+        />
+      )}
+
+      {/* SLIDE-OUT NAV DRAWER */}
+      <nav
+        className={`fixed left-0 top-0 z-40 flex h-full w-72 flex-col border-r border-orange-200 bg-[#FFF3E5] px-5 py-5 shadow-xl transition-transform duration-300 ease-out ${
+          navOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <div className="relative">
-              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white shadow-md">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
                 <Image
                   src="/ashoka.png"
                   alt="Ashoka Chakra"
-                  width={136}
-                  height={136}
+                  width={32}
+                  height={32}
                   className="animate-spin-slow"
-                  priority
                 />
               </div>
-              <div className="pointer-events-none absolute inset-2 rounded-full bg-white/10 blur-xl" />
             </div>
-            <div className="mt-2 text-center">
-              <p className="text-lg font-semibold text-orange-900">
+            <div>
+              <p className="text-sm font-semibold text-orange-900">
                 Udyog Mitra
               </p>
-              <p className="text-xs font-medium uppercase tracking-wide text-orange-600">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-orange-600">
                 MSME साथी
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setNavOpen(false)}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm hover:bg-orange-50"
+            aria-label="Close navigation"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-          <nav className="mt-8 space-y-2 text-sm">
-            <SidebarItem label="Home" active />
-            <SidebarItem label="Udyam Registration" />
-            <SidebarItem label="GST Help" />
-            <SidebarItem label="Loan & Subsidy Schemes" />
-            <SidebarItem label="Delayed Payments / Samadhaan" />
-          </nav>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-orange-600">
+          Navigate
+        </p>
 
-          <div className="mt-8 rounded-2xl bg-gradient-to-br from-orange-100 via-amber-100 to-rose-100 p-4 text-xs text-orange-900 shadow-sm">
-            <p className="mb-1 font-semibold">Why use {AI_NAME}?</p>
-            <ul className="list-inside list-disc space-y-1">
-              <li>No document upload required</li>
-              <li>Explains schemes in simple language</li>
-              <li>Helps you prepare bank-ready documents</li>
-            </ul>
-          </div>
+        <div className="space-y-1 text-sm">
+          <NavItem
+            href="/profile"
+            icon={<User className="h-4 w-4" />}
+            label="User Profile"
+            onClick={() => setNavOpen(false)}
+          />
+          <NavItem
+            href="/history"
+            icon={<Clock className="h-4 w-4" />}
+            label="Chat History"
+            onClick={() => setNavOpen(false)}
+          />
+          <NavItem
+            href="/schemes/national"
+            icon={<Flag className="h-4 w-4" />}
+            label="National Schemes"
+            onClick={() => setNavOpen(false)}
+          />
+          <NavItem
+            href="/schemes/state"
+            icon={<Flag className="h-4 w-4" />}
+            label="State Schemes"
+            onClick={() => setNavOpen(false)}
+          />
+          <NavItem
+            href="/settings"
+            icon={<Settings className="h-4 w-4" />}
+            label="Settings"
+            onClick={() => setNavOpen(false)}
+          />
+        </div>
 
-          <p className="mt-auto pt-6 text-center text-[11px] text-orange-500">
-            Made for Indian MSMEs with ❤
-            <span className="block opacity-80">
-              © {new Date().getFullYear()} {OWNER_NAME}
-            </span>
-          </p>
-        </aside>
+        <div className="mt-6 rounded-2xl bg-gradient-to-br from-orange-100 via-amber-100 to-rose-100 p-3 text-[11px] text-orange-900 shadow-sm">
+          <p className="mb-1 font-semibold text-[11px]">How this helps you</p>
+          <ul className="list-inside list-disc space-y-1 leading-snug">
+            <li>Find relevant MSME schemes faster</li>
+            <li>Keep your conversations in one place</li>
+            <li>Switch between national & state benefits</li>
+          </ul>
+        </div>
 
-        {/* MAIN: CHAT + RIGHT PANEL */}
+        <p className="mt-auto pt-6 text-center text-[11px] text-orange-500">
+          Made for Indian MSMEs with ❤
+          <span className="block opacity-80">
+            © {new Date().getFullYear()} {OWNER_NAME}
+          </span>
+        </p>
+      </nav>
+
+      {/* MAIN CONTENT WRAPPER */}
+      <div className="mx-auto flex min-h-screen max-w-7xl flex-row gap-4 px-3 py-4 md:px-6 md:py-6">
         <main className="flex flex-1 flex-row items-stretch gap-4">
           {/* CENTER CHAT AREA */}
           <section className="flex flex-1 items-center justify-center">
-            <div className="glass-card relative flex h-[calc(100vh-4rem)] w-full max-w-3xl flex-col">
+            <div className="glass-card relative flex w-full max-w-3xl flex-col h-[calc(100vh-5rem)] md:h-[calc(100vh-4rem)]">
               {/* HEADER */}
               <header className="flex items-center justify-between border-b border-orange-100 px-4 py-3 md:px-6 md:py-4">
                 <div className="flex items-center gap-3">
@@ -348,11 +422,11 @@ export default function Chat() {
                 </div>
               </header>
 
-              {/* HERO SLIDES + MESSAGES */}
+              {/* HERO + MESSAGES (SCROLLABLE AREA) */}
               <div className="relative flex-1 overflow-hidden">
                 <div
                   ref={scrollContainerRef}
-                  className="scrollbar-thin flex h-full flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
+                  className="flex h-full flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4 overscroll-contain"
                   onScroll={(e) => {
                     const el = e.currentTarget;
                     const atBottom =
@@ -451,7 +525,7 @@ export default function Chat() {
                 )}
               </div>
 
-              {/* INPUT BAR */}
+              {/* INPUT BAR (fixed at bottom of card) */}
               <div className="border-t border-orange-100 bg-white/90 px-4 py-3 md:px-6 md:py-4">
                 <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
                   <FieldGroup>
@@ -536,7 +610,7 @@ export default function Chat() {
             </div>
           </section>
 
-          {/* RIGHT PANEL – functional, large screens only */}
+          {/* RIGHT PANEL – with auto-scrolling carousel */}
           <RightPanel messages={messages} />
         </main>
       </div>
@@ -545,27 +619,39 @@ export default function Chat() {
 }
 
 // =======================
-//  Sidebar item helper
+//  Nav item helper (for slide-out nav)
 // =======================
 
-function SidebarItem({ label, active }: { label: string; active?: boolean }) {
+function NavItem({
+  href,
+  icon,
+  label,
+  onClick,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+}) {
   return (
-    <button
-      type="button"
-      className={[
-        "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-xs transition",
-        active
-          ? "bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-sm"
-          : "bg-orange-50 text-slate-800 hover:bg-orange-100",
-      ].join(" ")}
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex items-center justify-between rounded-xl px-3 py-2 text-xs text-slate-800 transition hover:bg-orange-100"
     >
-      <span className="font-medium">{label}</span>
-    </button>
+      <span className="flex items-center gap-2">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-orange-700 shadow-sm">
+          {icon}
+        </span>
+        <span className="font-medium">{label}</span>
+      </span>
+      <span className="text-[10px] text-orange-500">Open</span>
+    </Link>
   );
 }
 
 // =======================
-//  Right-side functional panel
+//  Right-side panel with vertical carousel
 // =======================
 
 function RightPanel({ messages }: { messages: UIMessage[] }) {
@@ -624,12 +710,26 @@ function RightPanel({ messages }: { messages: UIMessage[] }) {
         </ul>
       </div>
 
-      {/* Rotating tip */}
-      <div className="glass-card rounded-2xl p-4 text-xs text-slate-800">
+      {/* Auto-scrolling vertical carousel */}
+      <div className="glass-card rounded-2xl p-4 text-xs text-slate-800 overflow-hidden">
         <p className="mb-1 text-[11px] font-semibold text-orange-700">
-          Did you know?
+          Policy ticker – MSME tips
         </p>
-        <p className="leading-snug">{tips[tipIndex]}</p>
+        <div className="mt-1 h-20 overflow-hidden">
+          <div
+            className="transition-transform duration-500 ease-out"
+            style={{ transform: `translateY(-${tipIndex * 64}px)` }}
+          >
+            {tips.map((tip, idx) => (
+              <div key={idx} className="flex h-16 items-center gap-2 pr-1">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-orange-100 text-[10px] text-orange-700">
+                  {idx + 1}
+                </span>
+                <p className="text-[11px] leading-snug">{tip}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="mt-1 text-[10px] text-slate-400">
