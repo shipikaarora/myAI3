@@ -82,7 +82,7 @@ const loadMessagesFromStorage = (): StorageData => {
 
 const saveMessagesToStorage = (
   messages: UIMessage[],
-  durations: Record<string, number>
+  durations: Record<string, number>,
 ) => {
   if (typeof window === "undefined") return;
   try {
@@ -167,26 +167,24 @@ export default function Chat() {
 
   // Scroll handling
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
 
   // Floating navigator state
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
 
   // Auto-scroll: only when user is at bottom (showScrollDown === false)
-    // PERFECT AUTO-SCROLL: only when user is near bottom
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
 
-    const threshold = 150; // pixels from bottom
-    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    // If user has scrolled up (showScrollDown === true) → DON'T auto-scroll
+    if (showScrollDown) return;
 
-    if (isNearBottom) {
-      el.scrollTo({
-        top: el.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [messages, status]);
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages, status, showScrollDown]);
 
   // Inject welcome message if nothing saved
   useEffect(() => {
@@ -440,10 +438,10 @@ export default function Chat() {
 
         {/* MAIN + RIGHT GUIDE */}
         <main className="flex h-full flex-1 items-stretch px-3 py-4 md:px-6 md:py-6">
-          <div className="flex h-full w_full flex-row gap-4">
+          <div className="flex h-full w-full flex-row gap-4">
             {/* CENTER CHAT COLUMN */}
             <div className="flex h-full flex-1 flex-col items-stretch">
-              {/* CHAT CARD – FULL WIDTH, NO max-w */}
+              {/* CHAT CARD */}
               <div className="relative flex h-full w-full flex-1 flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
                 {/* HEADER */}
                 <header className="flex items-center justify-between border-b border-orange-100 px-4 py-3 md:px-6 md:py-4">
@@ -496,7 +494,12 @@ export default function Chat() {
                   <div
                     ref={scrollContainerRef}
                     className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
-                  
+                    onScroll={(e) => {
+                      const el = e.currentTarget;
+                      const atBottom =
+                        el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+                      setShowScrollDown(!atBottom);
+                    }}
                   >
                     {/* Hero strip when conversation is new */}
                     {messages.length <= 2 && (
