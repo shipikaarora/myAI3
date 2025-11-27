@@ -175,23 +175,19 @@ export default function Chat() {
   // Floating navigator state
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
 
-  // Auto-scroll ONLY if user is already near the bottom
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
+// Auto-scroll only when user is at/near bottom (showScrollDown === false)
+useEffect(() => {
+  const el = scrollContainerRef.current;
+  if (!el) return;
 
-    const distanceFromBottom =
-      el.scrollHeight - el.scrollTop - el.clientHeight;
+  // If showScrollDown is true, user has scrolled up → do NOT auto-scroll
+  if (showScrollDown) return;
 
-    // If user is already close to the bottom, keep following new messages.
-    // If they scrolled up, don't fight them.
-    if (distanceFromBottom < 80) {
-      el.scrollTo({
-        top: el.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [messages, status]);
+  el.scrollTo({
+    top: el.scrollHeight,
+    behavior: "smooth",
+  });
+}, [messages, status, showScrollDown]);
 
   // Inject welcome message if nothing saved
   useEffect(() => {
@@ -502,11 +498,11 @@ export default function Chat() {
                     ref={scrollContainerRef}
                     className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
                     onScroll={(e) => {
-                      const el = e.currentTarget;
-                      const atBottom =
-                        el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-                      setShowScrollDown(!atBottom);
-                    }}
+  const el = e.currentTarget;
+  const atBottom =
+    el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  setShowScrollDown(!atBottom); // true when user is NOT at bottom
+}}
                   >
                     {/* Hero strip when conversation is new */}
                     {messages.length <= 2 && (
@@ -581,16 +577,16 @@ export default function Chat() {
                   </div>
 
                   {/* Scroll-to-bottom pill */}
-                  {showScrollDown && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const el = scrollContainerRef.current;
-                        if (!el) return;
-                        el.scrollTo({
-                          top: el.scrollHeight,
-                          behavior: "smooth",
-                        });
+                  onClick={() => {
+  const el = scrollContainerRef.current;
+  if (!el) return;
+  el.scrollTo({
+    top: el.scrollHeight,
+    behavior: "smooth",
+  });
+  // we are back at bottom → allow auto-scroll again
+  setShowScrollDown(false);
+}};
                       }}
                       className="absolute bottom-24 right-4 rounded-full bg-slate-900/80 px-3 py-1 text-[11px] text-white shadow-lg"
                     >
