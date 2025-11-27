@@ -28,6 +28,7 @@ import {
   Info,
   PanelRightOpen,
   X,
+  ChevronRight,
 } from "lucide-react";
 import { MessageWall } from "@/components/messages/message-wall";
 
@@ -95,6 +96,52 @@ const saveMessagesToStorage = (
     console.error("Failed to save messages to localStorage:", error);
   }
 };
+
+// =======================
+//  Static content for Knowledge Panel
+// =======================
+
+const policyUpdates: string[] = [
+  "CGTMSE: Credit guarantee cover available for eligible MSME term loans and working capital – check bank-specific norms.",
+  "PMEGP: Higher subsidy slabs for units in special categories and rural areas – verify updated ceilings on KVIC portal.",
+  "Udyam: Aadhaar-based registration mandatory for availing most MSME schemes; ensure NIC/Udyam certificate is up to date.",
+  "MSME Samadhaan: Suppliers can file delayed payment cases online if dues exceed 45 days – interest may be payable by buyer.",
+  "GST & MSME: Composition scheme and threshold limits can impact your eligibility for certain schemes – keep turnover updated.",
+];
+
+const guidanceTopics: { title: string; bullets: string[] }[] = [
+  {
+    title: "If you are NEW to MSME schemes",
+    bullets: [
+      "Ask: “Create a simple checklist of registrations I must do first.”",
+      "Ask: “Explain Udyam registration step-by-step for my business.”",
+      "Ask: “Which 3 major schemes should I focus on as a beginner?”",
+    ],
+  },
+  {
+    title: "If you want LOANS / SUBSIDIES",
+    bullets: [
+      "Ask: “Can I get collateral-free loan under CGTMSE? Here are my turnover and loan needs.”",
+      "Ask: “Compare PMEGP vs traditional term loan for my manufacturing unit.”",
+      "Ask: “What documents do banks usually ask MSMEs for?”",
+    ],
+  },
+  {
+    title: "If you are facing DELAYED PAYMENTS",
+    bullets: [
+      "Ask: “Explain MSME Samadhaan and how to file a case.”",
+      "Ask: “Draft a polite email reminder quoting MSME payment rules.”",
+      "Ask: “What legal protections exist for MSME supplier invoices?”",
+    ],
+  },
+];
+
+const tipPrompts: string[] = [
+  "Give me a one-page MSME scheme roadmap for my business.",
+  "List central vs state MSME schemes relevant for Maharashtrian manufacturers.",
+  "Help me prepare a document checklist for a bank meeting.",
+  "Explain MSME delayed payment rules in simple Hindi.",
+];
 
 // =======================
 //  Component
@@ -174,6 +221,22 @@ export default function Chat() {
 
   // Floating navigator state
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
+
+  // Policy ticker (fade carousel)
+  const [tickerIndex, setTickerIndex] = useState(0);
+  const [tickerFading, setTickerFading] = useState(false);
+
+  useEffect(() => {
+    if (policyUpdates.length <= 1) return;
+    const interval = setInterval(() => {
+      setTickerFading(true);
+      setTimeout(() => {
+        setTickerIndex((prev) => (prev + 1) % policyUpdates.length);
+        setTickerFading(false);
+      }, 300);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, []);
 
   // Auto-scroll to bottom whenever messages or status change
   useEffect(() => {
@@ -261,6 +324,11 @@ export default function Chat() {
     },
   ];
 
+  // Handler for quick replies (MessageWall & Knowledge Panel)
+  const handleQuickReply = (text: string) => {
+    sendMessage({ text });
+  };
+
   return (
     <div
       className="h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
@@ -271,12 +339,12 @@ export default function Chat() {
         backgroundSize: "auto, 360px",
       }}
     >
-      {/* FLOATING NAVIGATOR TOGGLE BUTTON */}
+      {/* FLOATING NAVIGATOR TOGGLE BUTTON – NOW ON LEFT */}
       <button
         type="button"
         aria-label="Open quick navigator"
         onClick={() => setIsNavigatorOpen((prev) => !prev)}
-        className="fixed right-6 top-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-lg hover:from-orange-600 hover:to-rose-500"
+        className="fixed left-6 top-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-lg hover:from-orange-600 hover:to-rose-500"
       >
         {isNavigatorOpen ? (
           <X className="h-5 w-5" />
@@ -285,9 +353,9 @@ export default function Chat() {
         )}
       </button>
 
-      {/* FLOATING NAVIGATOR PANEL */}
+      {/* FLOATING NAVIGATOR PANEL – LEFT SIDE */}
       {isNavigatorOpen && (
-        <div className="fixed right-6 top-40 z-40 w-80 rounded-2xl border border-orange-100 bg-white/95 p-4 shadow-2xl backdrop-blur">
+        <div className="fixed left-6 top-40 z-40 w-80 rounded-2xl border border-orange-100 bg-white/95 p-4 shadow-2xl backdrop-blur">
           <h3 className="mb-2 text-sm font-semibold text-orange-900">
             Quick Navigator
           </h3>
@@ -305,7 +373,7 @@ export default function Chat() {
                 User Profile
               </span>
               <span className="text-[11px] text-orange-600">
-                View / update your MSME and owner details.
+                View / update your MSME and owner details (coming soon).
               </span>
             </div>
           </button>
@@ -323,7 +391,7 @@ export default function Chat() {
                 Chat History
               </span>
               <span className="text-[11px] text-orange-600">
-                Revisit or continue previous conversations.
+                Quickly jump back to recent discussions (coming soon).
               </span>
             </div>
           </button>
@@ -341,7 +409,7 @@ export default function Chat() {
                 Settings
               </span>
               <span className="text-[11px] text-orange-600">
-                Language, theme, and other preferences.
+                Language, theme, and other preferences (coming soon).
               </span>
             </div>
           </button>
@@ -350,6 +418,11 @@ export default function Chat() {
           <button
             type="button"
             className="mb-3 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs hover:bg-orange-50"
+            onClick={() =>
+              handleQuickReply(
+                "Give me a categorized list of important MSME schemes in India with 2-line descriptions."
+              )
+            }
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
               <FileStack className="h-4 w-4 text-orange-700" />
@@ -359,7 +432,7 @@ export default function Chat() {
                 Schemes
               </span>
               <span className="text-[11px] text-orange-600">
-                Browse central, state, and bank-linked MSME schemes.
+                Ask the bot to list and explain major schemes in one place.
               </span>
             </div>
           </button>
@@ -380,7 +453,7 @@ export default function Chat() {
       )}
 
       <div className="mx-auto flex h-full max-w-6xl flex-row">
-        {/* SIDEBAR */}
+        {/* SIDEBAR (fixed left) */}
         <aside className="hidden h-full w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
@@ -431,9 +504,10 @@ export default function Chat() {
           </p>
         </aside>
 
-        {/* MAIN CHAT AREA */}
-        <main className="flex h-full flex-1 items-stretch px-3 py-4 md:px-6 md:py-6">
-          <div className="flex h-full w-full flex-col items-center">
+        {/* MAIN CHAT + RIGHT KNOWLEDGE PANEL */}
+        <main className="flex h-full flex-1 items-stretch gap-4 px-3 py-4 md:px-6 md:py-6">
+          {/* CHAT COLUMN (center) */}
+          <div className="flex h-full w-full flex-col items-center md:flex-[2]">
             {/* CARD */}
             <div className="relative flex h-full w-full max-w-3xl flex-1 flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
               {/* HEADER */}
@@ -545,6 +619,7 @@ export default function Chat() {
                           status={status}
                           durations={durations}
                           onDurationChange={handleDurationChange}
+                          onQuickReply={handleQuickReply}
                         />
                         {status === "submitted" && (
                           <div className="mt-2 flex w-full max-w-xs items-center gap-2 rounded-2xl bg-orange-50 px-3 py-2 text-[11px] text-orange-700 shadow-sm">
@@ -668,6 +743,96 @@ export default function Chat() {
               </Link>
             </div>
           </div>
+
+          {/* RIGHT-SIDE KNOWLEDGE PANEL (LARGE, DESKTOP ONLY) */}
+          <aside className="hidden h-full w-[400px] flex-col md:flex">
+            <div className="flex h-full flex-col rounded-3xl border border-orange-100 bg-white/80 p-4 text-xs text-slate-800 shadow-[0_24px_60px_rgba(15,23,42,0.04)] backdrop-blur-md">
+              {/* Header */}
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-600">
+                    MSME Guide
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    How to use this assistant
+                  </p>
+                </div>
+                <span className="rounded-full bg-orange-50 px-2 py-1 text-[10px] font-medium text-orange-700">
+                  For Indian MSMEs
+                </span>
+              </div>
+
+              {/* Policy ticker */}
+              <div className="mb-4 rounded-2xl border border-dashed border-orange-200 bg-gradient-to-r from-orange-50 via-amber-50 to-rose-50 p-3">
+                <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold text-orange-800">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  Live policy & scheme pointers
+                </div>
+                <p
+                  className={`text-[11px] leading-snug text-orange-900 transition-opacity duration-300 ${
+                    tickerFading ? "opacity-0" : "opacity-100"
+                  }`}
+                >
+                  {policyUpdates[tickerIndex]}
+                </p>
+              </div>
+
+              {/* Example journeys / topics */}
+              <div className="mb-3 flex-1 space-y-3 overflow-y-auto pr-1">
+                {guidanceTopics.map((section, idx) => (
+                  <div
+                    key={section.title}
+                    className="rounded-2xl border border-slate-100 bg-slate-50/70 p-3"
+                  >
+                    <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-slate-800">
+                      <ChevronRight className="h-3 w-3 text-orange-500" />
+                      {section.title}
+                    </p>
+                    <ul className="space-y-1 text-[11px] text-slate-700">
+                      {section.bullets.map((b) => (
+                        <li key={b} className="flex gap-1">
+                          <span className="mt-[3px] h-1.5 w-1.5 rounded-full bg-slate-400" />
+                          <button
+                            type="button"
+                            className="text-left hover:text-orange-700"
+                            onClick={() => handleQuickReply(b)}
+                          >
+                            {b}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              {/* MSME tips – prompt chips */}
+              <div className="mt-1 border-t border-slate-100 pt-3">
+                <p className="mb-1 text-[11px] font-semibold text-slate-800">
+                  Quick prompts to get better answers
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {tipPrompts.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      className="rounded-full border border-orange-200 bg-white px-3 py-1 text-[10px] text-slate-700 shadow-sm hover:border-orange-300 hover:bg-orange-50"
+                      onClick={() => handleQuickReply(p)}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mini disclaimer */}
+              <p className="mt-3 text-[10px] leading-snug text-slate-400">
+                This panel is for orientation only. Always verify final scheme
+                details on official government portals and with your bank /
+                professional advisor.
+              </p>
+            </div>
+          </aside>
         </main>
       </div>
     </div>
