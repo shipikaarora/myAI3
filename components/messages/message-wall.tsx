@@ -116,8 +116,9 @@ export function MessageWall({
 
   let lastDayLabel: string | null = null;
 
+  // ⬇️ No max-width here – takes full width of the center card
   return (
-    <div className="relative mx-auto w-full max-w-3xl">
+    <div className="relative w-full">
       <div className="relative px-3 py-4 md:px-5 md:py-6">
         {/* soft fade at top */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-background/80 to-transparent" />
@@ -169,7 +170,7 @@ export function MessageWall({
                 <div className={`flex w-full ${rowClass}`}>
                   <div
                     className={`
-                      max-w-[80%] rounded-2xl px-4 py-3
+                      max-w-[92%] rounded-2xl px-4 py-3
                       backdrop-blur-sm transition-all duration-150
                       ${baseBubbleClass} ${importantClass}
                     `}
