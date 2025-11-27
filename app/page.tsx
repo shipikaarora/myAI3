@@ -10,10 +10,21 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
 import { useChat } from "@ai-sdk/react";
-import { ArrowUp, Loader2, Plus, Square, Bot, Sparkles } from "lucide-react";
+import {
+  ArrowUp,
+  Loader2,
+  Plus,
+  Square,
+  Bot,
+  Sparkles,
+  Building2,
+  FileText,
+  Landmark,
+  Scale,
+} from "lucide-react";
 import { MessageWall } from "@/components/messages/message-wall";
 
-import { UIMessage } from "ai";
+import type { UIMessage } from "ai";
 import { useEffect, useState, useRef } from "react";
 import {
   AI_NAME,
@@ -22,9 +33,11 @@ import {
   WELCOME_MESSAGE,
 } from "@/config";
 import Link from "next/link";
-import { Sidebar } from "@/app/components/Sidebar";
+import Image from "next/image";
 
-// ------------------ Validation ------------------
+// =======================
+//  Validation
+// =======================
 
 const formSchema = z.object({
   message: z
@@ -33,7 +46,9 @@ const formSchema = z.object({
     .max(2000, "Message must be at most 2000 characters."),
 });
 
-// ------------------ Local storage helpers ------------------
+// =======================
+//  Local storage helpers
+// =======================
 
 const STORAGE_KEY = "chat-messages";
 
@@ -74,7 +89,9 @@ const saveMessagesToStorage = (
   }
 };
 
-// ------------------ Page component ------------------
+// =======================
+//  Component
+// =======================
 
 export default function Chat() {
   // Welcome music – plays once on first click/tap
@@ -90,7 +107,7 @@ export default function Chat() {
       audio.volume = 0.5;
       audio.play().catch(() => {});
 
-      setTimeout(() => audio.pause(), 30000); // 30 seconds max
+      setTimeout(() => audio.pause(), 30000); // max 30 seconds
       setHasPlayedMusic(true);
     };
 
@@ -138,13 +155,13 @@ export default function Chat() {
   }, [durations, messages, isClient]);
 
   const handleDurationChange = (key: string, duration: number) => {
-    setDurations((prevDurations) => ({
-      ...prevDurations,
+    setDurations((prev) => ({
+      ...prev,
       [key]: duration,
     }));
   };
 
-  // Inject welcome message if nothing in history
+  // Inject welcome message if nothing saved
   useEffect(() => {
     if (
       isClient &&
@@ -152,7 +169,7 @@ export default function Chat() {
       !welcomeMessageShownRef.current
     ) {
       const welcomeMessage: UIMessage = {
-        id: `welcome-${Date.now()}`, // FIXED: proper string id
+        id: `welcome-${Date.now()}`,
         role: "assistant",
         parts: [
           {
@@ -167,7 +184,7 @@ export default function Chat() {
     }
   }, [isClient, initialMessages.length, setMessages]);
 
-  // Form setup
+  // Form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -189,44 +206,132 @@ export default function Chat() {
     toast.success("Chat cleared");
   }
 
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, status]);
+
+  const quickPrompts = [
+    "Check which MSME schemes I qualify for",
+    "Help me with delayed payments / MSME Samadhaan",
+    "I want a collateral-free loan for machinery",
+    "Explain Udyam registration in simple words",
+  ];
+
+  const heroSlides = [
+    {
+      icon: <Building2 className="h-4 w-4" />,
+      title: "PMEGP Subsidy",
+      text: "Capital subsidy up to 35% for new manufacturing & service units.",
+    },
+    {
+      icon: <Landmark className="h-4 w-4" />,
+      title: "CGTMSE Loans",
+      text: "Collateral-free loans for MSMEs with guarantee coverage.",
+    },
+    {
+      icon: <FileText className="h-4 w-4" />,
+      title: "Udyam & GST Help",
+      text: "Understand registration, turnover limits, and documentation.",
+    },
+    {
+      icon: <Scale className="h-4 w-4" />,
+      title: "MSME Samadhaan",
+      text: "Guidance on resolving delayed payments legally.",
+    },
+  ];
 
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
       style={{
         backgroundImage:
-          "linear-gradient(to bottom right, #fff7ed, #ffedd5, #ffe4e6), url(/bg-pattern.png)",
+          "linear-gradient(to bottom right, #FFF5EC, #FFE7D1, #FFFDF8), url(/bg-pattern.png)",
         backgroundRepeat: "repeat",
-        backgroundSize: "auto, 400px",
+        backgroundSize: "auto, 360px",
       }}
     >
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col md:flex-row">
-        {/* LEFT: Sidebar */}
-        <Sidebar />
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-row">
+        {/* SIDEBAR */}
+        <aside className="hidden h-screen w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative">
+              <div className="h-40 w-40 rounded-full bg-white shadow-md flex items-center justify-center">
+                <Image
+                  src="/ashoka.png"
+                  alt="Ashoka Chakra"
+                  width={136}
+                  height={136}
+                  className="animate-[spin_8s_linear_infinite]"
+                  priority
+                />
+              </div>
+              <div className="pointer-events-none absolute inset-2 rounded-full bg-white/10 blur-xl" />
+            </div>
+            <div className="text-center mt-2">
+              <p className="text-lg font-semibold text-orange-900">
+                Udyog Mitra
+              </p>
+              <p className="text-xs font-medium uppercase tracking-wide text-orange-600">
+                MSME साथी
+              </p>
+            </div>
+          </div>
 
-        {/* RIGHT: Chat Area */}
+          <nav className="mt-8 space-y-2 text-sm">
+            <SidebarItem label="Home" active />
+            <SidebarItem label="Udyam Registration" />
+            <SidebarItem label="GST Help" />
+            <SidebarItem label="Loan & Subsidy Schemes" />
+            <SidebarItem label="Delayed Payments / Samadhaan" />
+          </nav>
+
+          <div className="mt-8 rounded-2xl bg-gradient-to-br from-orange-100 via-amber-100 to-rose-100 p-4 text-xs text-orange-900 shadow-sm">
+            <p className="mb-1 font-semibold">Why use {AI_NAME}?</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>No document upload required</li>
+              <li>Explains schemes in simple language</li>
+              <li>Helps you prepare bank-ready documents</li>
+            </ul>
+          </div>
+
+          <p className="mt-auto pt-6 text-[11px] text-center text-orange-500">
+            Made for Indian MSMEs with ❤
+            <span className="block opacity-80">
+              © {new Date().getFullYear()} {OWNER_NAME}
+            </span>
+          </p>
+        </aside>
+
+        {/* MAIN CHAT AREA */}
         <main className="flex-1 px-3 py-4 md:px-6 md:py-6 flex items-stretch">
           <div className="flex h-full w-full flex-col items-center justify-center">
-            {/* Chat Shell Card */}
-            <div className="flex h-[calc(100vh-4rem)] w-full max-w-3xl flex-col rounded-3xl border border-orange-100 bg-white/75 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur">
+            <div className="relative flex h-[calc(100vh-4rem)] w-full max-w-3xl flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
               {/* HEADER */}
               <header className="flex items-center justify-between border-b border-orange-100 px-4 py-3 md:px-6 md:py-4">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 text-white shadow-md">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-md">
                       <Bot className="h-5 w-5" />
                     </div>
                     <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-white bg-emerald-500" />
                   </div>
                   <div>
-                    <h2 className="text-sm font-semibold text-slate-900">
-                      Chat with {AI_NAME}
-                    </h2>
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src="/logo.png"
+                        alt="Udyami Logo"
+                        width={26}
+                        height={26}
+                        className="rounded-md object-contain"
+                      />
+                      <h1 className="text-sm font-semibold text-slate-900">
+                        Chat with {AI_NAME}
+                      </h1>
+                    </div>
                     <p className="text-xs text-slate-500">
                       MSME schemes & documentation — simple, practical answers.
                     </p>
@@ -234,10 +339,10 @@ export default function Chat() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <div className="hidden items-center gap-1 rounded-full bg-orange-50 px-3 py-1 text-[11px] font-medium text-orange-700 md:flex">
-                    <Sparkles className="mr-1 h-3 w-3" />
+                  <span className="hidden items-center gap-1 rounded-full bg-orange-50 px-3 py-1 text-[11px] font-medium text-orange-700 md:flex">
+                    <Sparkles className="h-3 w-3" />
                     Powered by AI + MSME rules
-                  </div>
+                  </span>
                   <Button
                     variant="outline"
                     size="sm"
@@ -250,30 +355,108 @@ export default function Chat() {
                 </div>
               </header>
 
-              {/* MESSAGES */}
-              <div className="flex-1 overflow-y-auto px-4 py-3 md:px-6 md:py-4">
-                <div className="flex flex-col items-center justify-end min-h-full">
-                  {isClient ? (
-                    <>
-                      <MessageWall
-                        messages={messages}
-                        status={status}
-                        durations={durations}
-                        onDurationChange={handleDurationChange}
-                      />
-                      {status === "submitted" && (
-                        <div className="mt-2 flex w-full max-w-3xl justify-start">
-                          <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="flex w-full max-w-2xl justify-center">
-                      <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+              {/* HERO SLIDES + MESSAGES */}
+              <div className="relative flex-1 overflow-hidden">
+                {/* Scrollable content */}
+                <div
+                  ref={scrollContainerRef}
+                  className="flex h-full flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
+                  onScroll={(e) => {
+                    const el = e.currentTarget;
+                    const atBottom =
+                      el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+                    setShowScrollDown(!atBottom);
+                  }}
+                >
+                  {/* Hero strip when conversation is new */}
+                  {messages.length <= 2 && (
+                    <div className="mb-4">
+                      <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-orange-600">
+                        Key MSME benefits you can ask about
+                      </p>
+                      <div className="flex gap-3 overflow-x-auto pb-2">
+                        {heroSlides.map((slide, idx) => (
+                          <div
+                            key={idx}
+                            className="min-w-[200px] max-w-[220px] rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-xs text-slate-800 shadow-sm border border-orange-100"
+                          >
+                            <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-orange-800">
+                              {slide.icon}
+                              <span>{slide.title}</span>
+                            </div>
+                            <p className="text-[11px] leading-snug">
+                              {slide.text}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  <div ref={bottomRef} />
+
+                  {/* Quick prompts at the very start */}
+                  {messages.length <= 2 && (
+                    <div className="mb-4 flex flex-wrap gap-2 text-xs">
+                      {quickPrompts.map((label) => (
+                        <button
+                          key={label}
+                          type="button"
+                          className="rounded-full border border-orange-200 bg-white px-3 py-1 text-[11px] text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50"
+                          onClick={() => {
+                            sendMessage({ text: label });
+                          }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* MESSAGES */}
+                  <div className="flex flex-col items-center justify-end min-h-full">
+                    {isClient ? (
+                      <>
+                        <MessageWall
+                          messages={messages}
+                          status={status}
+                          durations={durations}
+                          onDurationChange={handleDurationChange}
+                        />
+                        {/* Typing indicator */}
+                        {status === "submitted" && (
+                          <div className="mt-2 flex w-full max-w-xs items-center gap-2 rounded-2xl bg-orange-50 px-3 py-2 text-[11px] text-orange-700 shadow-sm">
+                            <div className="flex gap-1">
+                              <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-orange-400" />
+                              <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-orange-400 [animation-delay:120ms]" />
+                              <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-orange-400 [animation-delay:240ms]" />
+                            </div>
+                            <span>Udyami is preparing your answer…</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex w-full max-w-2xl justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                      </div>
+                    )}
+                    <div ref={bottomRef} />
+                  </div>
                 </div>
+
+                {/* Scroll-to-bottom pill */}
+                {showScrollDown && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      scrollContainerRef.current?.scrollTo({
+                        top: scrollContainerRef.current.scrollHeight,
+                        behavior: "smooth",
+                      })
+                    }
+                    className="absolute bottom-24 right-4 rounded-full bg-slate-900/80 px-3 py-1 text-[11px] text-white shadow-lg"
+                  >
+                    Jump to latest
+                  </button>
+                )}
               </div>
 
               {/* INPUT BAR */}
@@ -295,7 +478,7 @@ export default function Chat() {
                             <Input
                               {...field}
                               id="chat-form-message"
-                              className="h-12 rounded-2xl bg-orange-50/70 pr-14 pl-4 text-sm placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-300"
+                              className="h-12 rounded-full bg-orange-50/80 pr-14 pl-4 text-sm placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-300"
                               placeholder="Type your question… e.g., “Can I get CGTMSE for a ₹20L machinery loan?”"
                               disabled={status === "streaming"}
                               aria-invalid={fieldState.invalid}
@@ -342,8 +525,8 @@ export default function Chat() {
                   </FieldGroup>
                 </form>
                 <p className="mt-2 text-[10px] text-slate-400">
-                  Tip: Rough ranges (turnover, amount, years) are enough – you
-                  don’t need exact figures.
+                  Tip: Rough ranges (turnover, loan amount, years) are enough –
+                  you don’t need exact figures.
                 </p>
               </div>
             </div>
@@ -363,5 +546,25 @@ export default function Chat() {
         </main>
       </div>
     </div>
+  );
+}
+
+// =======================
+//  Sidebar item helper
+// =======================
+
+function SidebarItem({ label, active }: { label: string; active?: boolean }) {
+  return (
+    <button
+      type="button"
+      className={[
+        "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-xs transition",
+        active
+          ? "bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-sm"
+          : "bg-orange-50 text-slate-800 hover:bg-orange-100",
+      ].join(" ")}
+    >
+      <span className="font-medium">{label}</span>
+    </button>
   );
 }
