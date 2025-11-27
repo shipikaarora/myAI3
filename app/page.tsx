@@ -167,26 +167,26 @@ export default function Chat() {
 
   // Scroll handling
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const [showScrollDown, setShowScrollDown] = useState(false);
 
   // Floating navigator state
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
 
   // Auto-scroll: only when user is at bottom (showScrollDown === false)
+    // PERFECT AUTO-SCROLL: only when user is near bottom
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
 
-    if (showScrollDown) {
-      // user has scrolled up → don't force scroll
-      return;
-    }
+    const threshold = 150; // pixels from bottom
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
 
-    el.scrollTo({
-      top: el.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [messages, status, showScrollDown]);
+    if (isNearBottom) {
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messages, status]);
 
   // Inject welcome message if nothing saved
   useEffect(() => {
@@ -496,12 +496,7 @@ export default function Chat() {
                   <div
                     ref={scrollContainerRef}
                     className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
-                    onScroll={(e) => {
-                      const el = e.currentTarget;
-                      const atBottom =
-                        el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-                      setShowScrollDown(!atBottom);
-                    }}
+                  
                   >
                     {/* Hero strip when conversation is new */}
                     {messages.length <= 2 && (
