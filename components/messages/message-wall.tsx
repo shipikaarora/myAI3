@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
@@ -131,13 +131,13 @@ export function MessageWall({
   let lastDayLabel: string | null = null;
 
   return (
-    <div className="relative max-w-3xl w-full mx-auto">
+    <div className="relative mx-auto w-full max-w-3xl">
       {/* No rectangle box wrapper – only padding */}
       <div className="relative px-3 py-4 md:px-5 md:py-6">
         {/* Optional soft fade at top – visually subtle, no box */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-background/80 to-transparent" />
 
-        <div className="flex flex-col gap-4 relative z-10">
+        <div className="relative z-10 flex flex-col gap-4">
           {messages.map((message, index) => {
             const isAssistant = message.role === "assistant";
             const plainText = getPlainText(message);
@@ -159,8 +159,8 @@ export function MessageWall({
               if (currentDayLabel !== lastDayLabel) {
                 lastDayLabel = currentDayLabel;
                 daySeparator = (
-                  <div className="flex justify-center my-2">
-                    <div className="px-3 py-1 rounded-full text-[11px] bg-slate-200/70 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 shadow-sm">
+                  <div className="my-2 flex justify-center">
+                    <div className="rounded-full bg-slate-200/70 px-3 py-1 text-[11px] text-slate-600 dark:bg-slate-800/80 dark:text-slate-300 shadow-sm">
                       {currentDayLabel}
                     </div>
                   </div>
@@ -168,117 +168,33 @@ export function MessageWall({
               }
             }
 
-            const rowClass = isAssistant
-              ? "justify-start"
-              : "justify-end";
-
-            const baseBubbleClass = isAssistant
-              ? "bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-slate-50 border border-slate-200/80 dark:border-slate-700/70"
-              : "bg-indigo-500 text-white shadow-md";
-
-            const importantClass = isImportant
-              ? "border-2 border-yellow-500 bg-yellow-50/95 dark:bg-yellow-900 text-black dark:text-yellow-100 shadow-lg"
-              : "";
-
             return (
               <div key={message.id}>
                 {daySeparator}
 
-                <div className={`flex w-full ${rowClass}`}>
-                  <div
-                    className={`
-                      max-w-[80%] rounded-2xl px-4 py-3
-                      backdrop-blur-sm transition-all duration-150
-                      ${baseBubbleClass} ${importantClass}
-                    `}
-                  >
-                    {/* Important badge */}
-                    {isImportant && (
-                      <div className="flex items-center gap-1 mb-1 text-xs font-semibold text-yellow-700 dark:text-yellow-200">
-                        <Info className="h-3 w-3" />
-                        Important
-                      </div>
-                    )}
-
-                    {/* Main content */}
-                    <div
-                      className={
-                        isImportant ? "underline underline-offset-4" : ""
-                      }
-                    >
-                      {isAssistant ? (
-                        <AssistantMessage
-                          message={message}
-                          status={status}
-                          isLastMessage={index === messages.length - 1}
-                          durations={durations}
-                          onDurationChange={onDurationChange}
-                        />
-                      ) : (
-                        <UserMessage message={message} />
-                      )}
-                    </div>
-
-                    {/* Checklist (optional) */}
-                    {checklistItems.length > 0 && (
-                      <div className="mt-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-700/70 px-3 py-2 text-xs text-slate-700 dark:text-slate-200">
-                        <div className="font-semibold mb-1">
-                          Action items
-                        </div>
-                        <ul className="space-y-1">
-                          {checklistItems.map((item, idx) => (
-                            <li
-                              key={`${message.id}-item-${idx}`}
-                              className="flex items-start gap-2"
-                            >
-                              <span className="mt-[3px] inline-block h-2 w-2 rounded-full bg-emerald-500" />
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Timestamp */}
-                    {timeLabel && (
-                      <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 flex justify-end">
-                        {timeLabel}
-                      </div>
-                    )}
-
-                    {/* Quick replies under LAST assistant message only */}
-                    {isAssistant && isLastAssistant && onQuickReply && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {[
-                          "Summarize this in simpler words",
-                          "Give me a step-by-step checklist",
-                          "Explain this in Hindi",
-                        ].map((chip) => (
-                          <Button
-                            key={chip}
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-6 text-[11px] rounded-full border-slate-300/70 dark:border-slate-600/70 bg-white/70 dark:bg-slate-900/70 px-3"
-                            onClick={() => onQuickReply(chip)}
-                          >
-                            {chip}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <MessageBubble
+                  message={message}
+                  plainText={plainText}
+                  isAssistant={isAssistant}
+                  isImportant={isImportant}
+                  checklistItems={checklistItems}
+                  timeLabel={timeLabel}
+                  isLastAssistant={isLastAssistant}
+                  status={status}
+                  durations={durations}
+                  onDurationChange={onDurationChange}
+                  onQuickReply={onQuickReply}
+                />
               </div>
             );
           })}
 
           {/* Typing indicator */}
           {status === "submitted" && (
-            <div className="flex items-center gap-2 pl-2 mt-1">
-              <span className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-              <span className="w-2 h-2 bg-primary rounded-full animate-bounce delay-150" />
-              <span className="w-2 h-2 bg-primary rounded-full animate-bounce delay-300" />
+            <div className="mt-1 flex items-center gap-2 pl-2">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-primary" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:120ms]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:240ms]" />
             </div>
           )}
 
@@ -287,6 +203,126 @@ export function MessageWall({
 
         {/* Bottom soft fade – also subtle, no box */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background/80 to-transparent" />
+      </div>
+    </div>
+  );
+}
+
+type MessageBubbleProps = {
+  message: UIMessage;
+  plainText: string;
+  isAssistant: boolean;
+  isImportant: boolean;
+  checklistItems: string[];
+  timeLabel: string | null;
+  isLastAssistant: boolean;
+  status?: string;
+  durations?: Record<string, number>;
+  onDurationChange?: (key: string, duration: number) => void;
+  onQuickReply?: (text: string) => void;
+};
+
+function MessageBubble({
+  message,
+  plainText,
+  isAssistant,
+  isImportant,
+  checklistItems,
+  timeLabel,
+  isLastAssistant,
+  status,
+  durations,
+  onDurationChange,
+  onQuickReply,
+}: MessageBubbleProps) {
+  const rowClass = isAssistant ? "justify-start" : "justify-end";
+
+  const baseBubbleClass = isAssistant
+    ? "bg-slate-50/90 text-slate-900 border border-slate-200/80 dark:bg-slate-800 dark:text-slate-50 dark:border-slate-700/70"
+    : "bg-indigo-500 text-white shadow-md";
+
+  const importantClass = isImportant
+    ? "border-2 border-yellow-500 bg-yellow-50/95 text-black shadow-lg dark:bg-yellow-900 dark:text-yellow-100"
+    : "";
+
+  return (
+    <div className={`flex w-full ${rowClass}`}>
+      <div
+        className={`
+          max-w-[80%] rounded-2xl px-4 py-3
+          backdrop-blur-sm transition-all duration-150
+          ${baseBubbleClass} ${importantClass}
+        `}
+      >
+        {/* Important badge */}
+        {isImportant && (
+          <div className="mb-1 flex items-center gap-1 text-xs font-semibold text-yellow-700 dark:text-yellow-200">
+            <Info className="h-3 w-3" />
+            Important
+          </div>
+        )}
+
+        {/* Main content */}
+        <div className={isImportant ? "underline underline-offset-4" : ""}>
+          {isAssistant ? (
+            <AssistantMessage
+              message={message}
+              status={status}
+              isLastMessage={false}
+              durations={durations}
+              onDurationChange={onDurationChange}
+            />
+          ) : (
+            <UserMessage message={message} />
+          )}
+        </div>
+
+        {/* Checklist (optional) */}
+        {checklistItems.length > 0 && (
+          <div className="mt-3 rounded-xl border border-slate-200/70 bg-white/80 px-3 py-2 text-xs text-slate-700 dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200">
+            <div className="mb-1 font-semibold">Action items</div>
+            <ul className="space-y-1">
+              {checklistItems.map((item, idx) => (
+                <li
+                  key={`${message.id}-item-${idx}`}
+                  className="flex items-start gap-2"
+                >
+                  <span className="mt-[3px] inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Timestamp */}
+        {timeLabel && (
+          <div className="mt-1 flex justify-end text-[11px] text-slate-500 dark:text-slate-400">
+            {timeLabel}
+          </div>
+        )}
+
+        {/* Quick replies under LAST assistant message only */}
+        {isAssistant && isLastAssistant && onQuickReply && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {[
+              "Summarize this in simpler words",
+              "Give me a step-by-step checklist",
+              "Explain this in Hindi",
+            ].map((chip) => (
+              <Button
+                key={chip}
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-6 rounded-full border-slate-300/70 bg-white/70 px-3 text-[11px] dark:border-slate-600/70 dark:bg-slate-900/70"
+                onClick={() => onQuickReply(chip)}
+              >
+                {chip}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
