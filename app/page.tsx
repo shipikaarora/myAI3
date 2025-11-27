@@ -21,6 +21,13 @@ import {
   FileText,
   Landmark,
   Scale,
+  User,
+  History,
+  Settings as SettingsIcon,
+  FileStack,
+  Info,
+  PanelLeftOpen,
+  X,
 } from "lucide-react";
 import { MessageWall } from "@/components/messages/message-wall";
 
@@ -57,10 +64,7 @@ type StorageData = {
   durations: Record<string, number>;
 };
 
-const loadMessagesFromStorage = (): {
-  messages: UIMessage[];
-  durations: Record<string, number>;
-} => {
+const loadMessagesFromStorage = (): StorageData => {
   if (typeof window === "undefined") return { messages: [], durations: {} };
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -78,7 +82,7 @@ const loadMessagesFromStorage = (): {
 
 const saveMessagesToStorage = (
   messages: UIMessage[],
-  durations: Record<string, number>
+  durations: Record<string, number>,
 ) => {
   if (typeof window === "undefined") return;
   try {
@@ -161,6 +165,27 @@ export default function Chat() {
     }));
   };
 
+  // Scroll handling
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
+
+  // Floating navigator state
+  const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
+
+  // Auto-scroll: only when user is at bottom (showScrollDown === false)
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    // If user has scrolled up (showScrollDown === true) → DON'T auto-scroll
+    if (showScrollDown) return;
+
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages, status, showScrollDown]);
+
   // Inject welcome message if nothing saved
   useEffect(() => {
     if (
@@ -206,18 +231,6 @@ export default function Chat() {
     toast.success("Chat cleared");
   }
 
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const [showScrollDown, setShowScrollDown] = useState(false);
-  const [isAtBottom, setIsAtBottom] = useState(true);
-
-  // Only auto-scroll when user is already at bottom
-  useEffect(() => {
-    if (isAtBottom) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, status, isAtBottom]);
-
   const quickPrompts = [
     "Check which MSME schemes I qualify for",
     "Help me with delayed payments / MSME Samadhaan",
@@ -250,7 +263,7 @@ export default function Chat() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
+      className="h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
       style={{
         backgroundImage:
           "linear-gradient(to bottom right, #FFF5EC, #FFE7D1, #FFFDF8), url(/bg-pattern.png)",
@@ -258,12 +271,125 @@ export default function Chat() {
         backgroundSize: "auto, 360px",
       }}
     >
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-row">
-        {/* OUTER LEFT SIDEBAR */}
-        <aside className="hidden h-screen w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
+      {/* FLOATING NAVIGATOR TOGGLE BUTTON – LEFT SIDE */}
+      <button
+        type="button"
+        aria-label="Open quick navigator"
+        onClick={() => setIsNavigatorOpen((prev) => !prev)}
+        className="fixed left-6 top-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-lg hover:from-orange-600 hover:to-rose-500"
+      >
+        {isNavigatorOpen ? (
+          <X className="h-5 w-5" />
+        ) : (
+          <PanelLeftOpen className="h-5 w-5" />
+        )}
+      </button>
+
+      {/* FLOATING NAVIGATOR PANEL */}
+      {isNavigatorOpen && (
+        <div className="fixed left-6 top-40 z-40 w-80 rounded-2xl border border-orange-100 bg-white/95 p-4 shadow-2xl backdrop-blur">
+          <h3 className="mb-3 text-sm font-semibold text-orange-900">
+            Quick Navigator
+          </h3>
+
+          {/* User Profile */}
+          <button
+            type="button"
+            className="mb-2 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs hover:bg-orange-50"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+              <User className="h-4 w-4 text-orange-700" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-medium text-orange-900">
+                User Profile
+              </span>
+              <span className="text-[11px] text-orange-600">
+                View / update your MSME and owner details (coming soon).
+              </span>
+            </div>
+          </button>
+
+          {/* Chat History */}
+          <button
+            type="button"
+            className="mb-2 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs hover:bg-orange-50"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+              <History className="h-4 w-4 text-orange-700" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-medium text-orange-900">
+                Chat History
+              </span>
+              <span className="text-[11px] text-orange-600">
+                Quickly jump back to recent discussions (coming soon).
+              </span>
+            </div>
+          </button>
+
+          {/* Settings */}
+          <button
+            type="button"
+            className="mb-2 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs hover:bg-orange-50"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+              <SettingsIcon className="h-4 w-4 text-orange-700" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-medium text-orange-900">
+                Settings
+              </span>
+              <span className="text-[11px] text-orange-600">
+                Language, theme, and other preferences (coming soon).
+              </span>
+            </div>
+          </button>
+
+          {/* Schemes */}
+          <button
+            type="button"
+            className="mb-3 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs hover:bg-orange-50"
+            onClick={() =>
+              sendMessage({
+                text: "Give me a list of major MSME schemes (central, state, bank-linked) and group them by category with one-line descriptions.",
+              })
+            }
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+              <FileStack className="h-4 w-4 text-orange-700" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-medium text-orange-900">
+                Schemes
+              </span>
+              <span className="text-[11px] text-orange-600">
+                Ask the bot to list and explain major schemes in one place.
+              </span>
+            </div>
+          </button>
+
+          {/* Disclaimer */}
+          <div className="flex gap-2 rounded-xl bg-orange-50 p-3">
+            <div className="mt-0.5">
+              <Info className="h-4 w-4 text-orange-700" />
+            </div>
+            <p className="text-[11px] leading-snug text-orange-800">
+              <span className="font-semibold">Disclaimer:</span> This chatbot
+              provides informational guidance based on MSME rules. It does not
+              replace official government notifications, portal instructions, or
+              professional legal / financial advice.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="mx-auto flex h-full max-w-6xl flex-row">
+        {/* LEFT FIXED SIDEBAR */}
+        <aside className="hidden h-full w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
-              <div className="h-40 w-40 rounded-full bg-white shadow-md flex items-center justify-center">
+              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white shadow-md">
                 <Image
                   src="/ashoka.png"
                   alt="Ashoka Chakra"
@@ -275,7 +401,7 @@ export default function Chat() {
               </div>
               <div className="pointer-events-none absolute inset-2 rounded-full bg-white/10 blur-xl" />
             </div>
-            <div className="text-center mt-2">
+            <div className="mt-2 text-center">
               <p className="text-lg font-semibold text-orange-900">
                 Udyog Mitra
               </p>
@@ -295,14 +421,14 @@ export default function Chat() {
 
           <div className="mt-8 rounded-2xl bg-gradient-to-br from-orange-100 via-amber-100 to-rose-100 p-4 text-xs text-orange-900 shadow-sm">
             <p className="mb-1 font-semibold">Why use {AI_NAME}?</p>
-            <ul className="list-disc list-inside space-y-1">
+            <ul className="list-inside list-disc space-y-1">
               <li>No document upload required</li>
               <li>Explains schemes in simple language</li>
               <li>Helps you prepare bank-ready documents</li>
             </ul>
           </div>
 
-          <p className="mt-auto pt-6 text-[11px] text-center text-orange-500">
+          <p className="mt-auto pt-6 text-center text-[11px] text-orange-500">
             Made for Indian MSMEs with ❤
             <span className="block opacity-80">
               © {new Date().getFullYear()} {OWNER_NAME}
@@ -310,35 +436,13 @@ export default function Chat() {
           </p>
         </aside>
 
-        {/* MAIN CONTENT: inner left nav + chat + right data */}
-        <main className="flex-1 px-3 py-4 md:px-6 md:py-6 flex items-stretch">
-          <div className="flex h-full w-full gap-4">
-            {/* INNER LEFT NAVIGATION (chat-level) */}
-            <div className="hidden lg:flex w-52 flex-col rounded-2xl border border-orange-100 bg-white/70 px-4 py-4 shadow-sm">
-              <p className="mb-3 text-xs font-semibold text-orange-700 uppercase tracking-wide">
-                Navigation
-              </p>
-              <button className="mb-1 flex items-center justify-between rounded-xl bg-orange-50 px-3 py-2 text-xs font-medium text-slate-800">
-                <span>Overview</span>
-              </button>
-              <button className="mb-1 flex items-center justify-between rounded-xl px-3 py-2 text-xs text-slate-700 hover:bg-orange-50">
-                <span>My MSME Profile</span>
-              </button>
-              <button className="mb-1 flex items-center justify-between rounded-xl px-3 py-2 text-xs text-slate-700 hover:bg-orange-50">
-                <span>Saved Queries</span>
-              </button>
-              <button className="mt-3 flex items-center justify-between rounded-xl px-3 py-2 text-xs text-slate-700 hover:bg-orange-50">
-                <span>Help & Support</span>
-              </button>
-              <div className="mt-auto pt-4 border-t border-orange-100 text-[11px] text-slate-500">
-                Use the center chat to ask anything about schemes, loans,
-                documentation, or delayed payments.
-              </div>
-            </div>
-
-            {/* CENTER: CHAT CARD (UNCHANGED IN LOOK & FEEL) */}
-            <div className="flex-1 flex items-center justify-center">
-              <div className="relative flex h-[calc(100vh-4rem)] w-full max-w-3xl flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
+        {/* MAIN + RIGHT GUIDE */}
+        <main className="flex h-full flex-1 items-stretch px-3 py-4 md:px-6 md:py-6">
+          <div className="flex h-full w-full flex-row gap-4">
+            {/* CENTER CHAT COLUMN */}
+            <div className="flex h-full flex-1 flex-col items-stretch">
+              {/* CHAT CARD */}
+              <div className="relative flex h-full w-full flex-1 flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
                 {/* HEADER */}
                 <header className="flex items-center justify-between border-b border-orange-100 px-4 py-3 md:px-6 md:py-4">
                   <div className="flex items-center gap-3">
@@ -385,18 +489,16 @@ export default function Chat() {
                   </div>
                 </header>
 
-                {/* HERO SLIDES + MESSAGES */}
-                <div className="relative flex-1 overflow-hidden">
-                  {/* Scrollable content */}
+                {/* HERO + MESSAGES AREA */}
+                <div className="relative flex min-h-0 flex-1 overflow-hidden">
                   <div
                     ref={scrollContainerRef}
-                    className="flex h-full flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
+                    className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
                     onScroll={(e) => {
                       const el = e.currentTarget;
                       const atBottom =
                         el.scrollHeight - el.scrollTop - el.clientHeight < 40;
                       setShowScrollDown(!atBottom);
-                      setIsAtBottom(atBottom);
                     }}
                   >
                     {/* Hero strip when conversation is new */}
@@ -409,7 +511,7 @@ export default function Chat() {
                           {heroSlides.map((slide, idx) => (
                             <div
                               key={idx}
-                              className="min-w-[200px] max-w-[220px] rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-xs text-slate-800 shadow-sm border border-orange-100"
+                              className="min-w-[200px] rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-xs text-slate-800 shadow-sm"
                             >
                               <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-orange-800">
                                 {slide.icon}
@@ -443,7 +545,7 @@ export default function Chat() {
                     )}
 
                     {/* MESSAGES */}
-                    <div className="flex flex-col items-center justify-end min-h-full">
+                    <div className="flex min-h-0 flex-1 flex-col justify-end">
                       {isClient ? (
                         <>
                           <MessageWall
@@ -452,7 +554,6 @@ export default function Chat() {
                             durations={durations}
                             onDurationChange={handleDurationChange}
                           />
-                          {/* Typing indicator */}
                           {status === "submitted" && (
                             <div className="mt-2 flex w-full max-w-xs items-center gap-2 rounded-2xl bg-orange-50 px-3 py-2 text-[11px] text-orange-700 shadow-sm">
                               <div className="flex gap-1">
@@ -465,11 +566,10 @@ export default function Chat() {
                           )}
                         </>
                       ) : (
-                        <div className="flex w-full max-w-2xl justify-center">
+                        <div className="flex w-full justify-center">
                           <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
                         </div>
                       )}
-                      <div ref={bottomRef} />
                     </div>
                   </div>
 
@@ -477,13 +577,15 @@ export default function Chat() {
                   {showScrollDown && (
                     <button
                       type="button"
-                      onClick={() =>
-                        scrollContainerRef.current?.scrollTo({
-                          top:
-                            scrollContainerRef.current.scrollHeight ?? 0,
+                      onClick={() => {
+                        const el = scrollContainerRef.current;
+                        if (!el) return;
+                        el.scrollTo({
+                          top: el.scrollHeight,
                           behavior: "smooth",
-                        })
-                      }
+                        });
+                        setShowScrollDown(false);
+                      }}
                       className="absolute bottom-24 right-4 rounded-full bg-slate-900/80 px-3 py-1 text-[11px] text-white shadow-lg"
                     >
                       Jump to latest
@@ -511,7 +613,7 @@ export default function Chat() {
                                 {...field}
                                 id="chat-form-message"
                                 className="h-12 rounded-full bg-orange-50/80 pr-14 pl-4 text-sm placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-300"
-                                placeholder='Type your question… e.g., “Can I get CGTMSE for a ₹20L machinery loan?”'
+                                placeholder='Type your question… e.g., "Can I get CGTMSE for a ₹20L machinery loan?"'
                                 disabled={status === "streaming"}
                                 aria-invalid={fieldState.invalid}
                                 autoComplete="off"
@@ -562,39 +664,164 @@ export default function Chat() {
                   </p>
                 </div>
               </div>
+
+              {/* FOOTER SMALL LINE */}
+              <div className="mt-4 flex items-center justify-center text-[11px] text-slate-400">
+                © {new Date().getFullYear()} {OWNER_NAME}&nbsp;
+                <Link href="/terms" className="underline">
+                  Terms of Use
+                </Link>
+                &nbsp;Powered by&nbsp;
+                <Link href="https://ringel.ai/" className="underline">
+                  Ringel.AI
+                </Link>
+              </div>
             </div>
 
-            {/* RIGHT-SIDE DATA / INSIGHTS PANEL */}
-            <div className="hidden lg:flex w-72 flex-col gap-3 rounded-2xl border border-orange-100 bg-white/70 px-4 py-4 shadow-sm">
-              <p className="text-xs font-semibold text-orange-700 uppercase tracking-wide">
-                Live summary
-              </p>
-              <div className="rounded-xl bg-orange-50/80 p-3 text-[11px] text-slate-800 border border-orange-100">
-                <p className="font-semibold mb-1">What {AI_NAME} can do now</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Check scheme eligibility from your answers.</li>
-                  <li>Suggest likely documents & basic checklists.</li>
-                  <li>Flag common rejection reasons for MSME loans.</li>
-                </ul>
+            {/* RIGHT KNOWLEDGE PANEL */}
+            <aside className="hidden h-full w-[320px] flex-col rounded-3xl border border-orange-100 bg-white/80 px-5 py-5 text-xs text-slate-800 shadow-[0_24px_60px_rgba(15,23,42,0.04)] backdrop-blur md:flex">
+              <div className="mb-2 flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-700">
+                    MSME Guide
+                  </p>
+                  <p className="text-xs font-medium text-slate-900">
+                    How to use this assistant
+                  </p>
+                </div>
+                <span className="rounded-full bg-orange-50 px-2 py-1 text-[10px] font-semibold text-orange-700">
+                  For Indian MSMEs
+                </span>
               </div>
 
-              <div className="rounded-xl bg-amber-50/80 p-3 text-[11px] text-slate-800 border border-amber-100">
-                <p className="font-semibold mb-1">Quick numbers</p>
-                <p className="mb-1">
-                  This is a static panel for now – later you can show:
+              {/* Policy ticker */}
+              <div className="mb-4 rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 via-amber-50 to-rose-50 p-3">
+                <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold text-orange-800">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  Live policy & scheme pointers
+                </div>
+                <p className="text-[11px] leading-snug text-orange-800">
+                  GST & MSME: Composition scheme and threshold limits can impact
+                  your eligibility for certain schemes – keep turnover updated
+                  on all registrations.
                 </p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Count of queries answered today.</li>
-                  <li>Top scheme mentioned in this chat.</li>
-                  <li>Tags like “Loan”, “Subsidy”, “Compliance”.</li>
-                </ul>
               </div>
 
-              <div className="mt-auto pt-3 border-t border-orange-100 text-[11px] text-slate-500">
-                This right panel is meant for summaries, links, or next actions
-                so the user always sees some context along with the chat.
+              <div className="space-y-3 overflow-y-auto">
+                {/* NEW TO MSME */}
+                <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-3">
+                  <p className="mb-1 text-[11px] font-semibold text-orange-800">
+                    ▸ If you are NEW to MSME schemes
+                  </p>
+                  <ul className="space-y-1 text-[11px] text-slate-700">
+                    <li>
+                      <button
+                        type="button"
+                        className="text-left hover:underline"
+                        onClick={() =>
+                          sendMessage({
+                            text: "Create a simple checklist of registrations and licenses I must do first as a new MSME.",
+                          })
+                        }
+                      >
+                        Ask: “Create a simple checklist of registrations I must
+                        do first.”
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        className="text-left hover:underline"
+                        onClick={() =>
+                          sendMessage({
+                            text: "Explain Udyam registration step-by-step for my business with a clear document list.",
+                          })
+                        }
+                      >
+                        Ask: “Explain Udyam registration step-by-step for my
+                        business.”
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* LOANS / SUBSIDIES */}
+                <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-3">
+                  <p className="mb-1 text-[11px] font-semibold text-orange-800">
+                    ▸ If you want LOANS / SUBSIDIES
+                  </p>
+                  <ul className="space-y-1 text-[11px] text-slate-700">
+                    <li>
+                      <button
+                        type="button"
+                        className="text-left hover:underline"
+                        onClick={() =>
+                          sendMessage({
+                            text: "Can I get a collateral-free loan under CGTMSE? These are my turnover and loan requirements.",
+                          })
+                        }
+                      >
+                        Ask: “Can I get a collateral-free loan under CGTMSE?”
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        className="text-left hover:underline"
+                        onClick={() =>
+                          sendMessage({
+                            text: "What documents do banks usually ask MSMEs for when applying for a term loan and working capital?",
+                          })
+                        }
+                      >
+                        Ask: “What documents do banks usually ask MSMEs for?”
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* DELAYED PAYMENTS */}
+                <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-3">
+                  <p className="mb-1 text-[11px] font-semibold text-orange-800">
+                    ▸ If you are facing DELAYED PAYMENTS
+                  </p>
+                  <ul className="space-y-1 text-[11px] text-slate-700">
+                    <li>
+                      <button
+                        type="button"
+                        className="text-left hover:underline"
+                        onClick={() =>
+                          sendMessage({
+                            text: "Explain MSME Samadhaan and how I can file a case for delayed payments from a large buyer.",
+                          })
+                        }
+                      >
+                        Ask: “Explain MSME Samadhaan and how to file a case.”
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        className="text-left hover:underline"
+                        onClick={() =>
+                          sendMessage({
+                            text: "Draft a polite email reminder quoting MSME payment rules and interest for delayed payment.",
+                          })
+                        }
+                      >
+                        Ask: “Draft a polite email reminder quoting MSME rules.”
+                      </button>
+                    </li>
+                  </ul>
+                </div>
               </div>
-            </div>
+
+              <p className="mt-3 text-[10px] leading-snug text-slate-400">
+                This panel is for orientation only. Always verify final scheme
+                details on official government portals and with your bank /
+                professional advisor.
+              </p>
+            </aside>
           </div>
         </main>
       </div>
