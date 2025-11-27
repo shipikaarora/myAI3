@@ -113,34 +113,24 @@ const guidanceTopics: { title: string; bullets: string[] }[] = [
   {
     title: "If you are NEW to MSME schemes",
     bullets: [
-      "Ask: “Create a simple checklist of registrations I must do first.”",
-      "Ask: “Explain Udyam registration step-by-step for my business.”",
-      "Ask: “Which 3 major schemes should I focus on as a beginner?”",
+      'Ask: “Create a simple checklist of registrations I must do first.”',
+      'Ask: “Explain Udyam registration step-by-step for my business.”',
     ],
   },
   {
     title: "If you want LOANS / SUBSIDIES",
     bullets: [
-      "Ask: “Can I get collateral-free loan under CGTMSE? Here are my turnover and loan needs.”",
-      "Ask: “Compare PMEGP vs traditional term loan for my manufacturing unit.”",
-      "Ask: “What documents do banks usually ask MSMEs for?”",
+      'Ask: “Can I get collateral-free loan under CGTMSE? Here are my turnover and loan needs.”',
+      'Ask: “What documents do banks usually ask MSMEs for?”',
     ],
   },
   {
     title: "If you are facing DELAYED PAYMENTS",
     bullets: [
-      "Ask: “Explain MSME Samadhaan and how to file a case.”",
-      "Ask: “Draft a polite email reminder quoting MSME payment rules.”",
-      "Ask: “What legal protections exist for MSME supplier invoices?”",
+      'Ask: “Explain MSME Samadhaan and how to file a case.”',
+      'Ask: “Draft a polite email reminder quoting MSME payment rules.”',
     ],
   },
-];
-
-const tipPrompts: string[] = [
-  "Give me a one-page MSME scheme roadmap for my business.",
-  "List central vs state MSME schemes relevant for Maharashtrian manufacturers.",
-  "Help me prepare a document checklist for a bank meeting.",
-  "Explain MSME delayed payment rules in simple Hindi.",
 ];
 
 // =======================
@@ -324,7 +314,6 @@ export default function Chat() {
     },
   ];
 
-  // Handler for quick replies (MessageWall & Knowledge Panel)
   const handleQuickReply = (text: string) => {
     sendMessage({ text });
   };
@@ -339,7 +328,7 @@ export default function Chat() {
         backgroundSize: "auto, 360px",
       }}
     >
-      {/* FLOATING NAVIGATOR TOGGLE BUTTON – NOW ON LEFT */}
+      {/* FLOATING NAVIGATOR TOGGLE BUTTON – LEFT */}
       <button
         type="button"
         aria-label="Open quick navigator"
@@ -353,7 +342,7 @@ export default function Chat() {
         )}
       </button>
 
-      {/* FLOATING NAVIGATOR PANEL – LEFT SIDE */}
+      {/* FLOATING NAVIGATOR PANEL – LEFT */}
       {isNavigatorOpen && (
         <div className="fixed left-6 top-40 z-40 w-80 rounded-2xl border border-orange-100 bg-white/95 p-4 shadow-2xl backdrop-blur">
           <h3 className="mb-2 text-sm font-semibold text-orange-900">
@@ -453,7 +442,7 @@ export default function Chat() {
       )}
 
       <div className="mx-auto flex h-full max-w-6xl flex-row">
-        {/* SIDEBAR (fixed left) */}
+        {/* FIXED LEFT SIDEBAR */}
         <aside className="hidden h-full w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
@@ -506,10 +495,9 @@ export default function Chat() {
 
         {/* MAIN CHAT + RIGHT KNOWLEDGE PANEL */}
         <main className="flex h-full flex-1 items-stretch gap-4 px-3 py-4 md:px-6 md:py-6">
-          {/* CHAT COLUMN (center) */}
-          <div className="flex h-full w-full flex-col items-center md:flex-[2]">
-            {/* CARD */}
-            <div className="relative flex h-full w-full max-w-3xl flex-1 flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
+          {/* CHAT COLUMN – wide and stable */}
+          <div className="flex h-full w-full flex-col md:flex-[3]">
+            <div className="relative flex h-full w-full flex-1 flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
               {/* HEADER */}
               <header className="flex items-center justify-between border-b border-orange-100 px-4 py-3 md:px-6 md:py-4">
                 <div className="flex items-center gap-3">
@@ -611,7 +599,7 @@ export default function Chat() {
                   )}
 
                   {/* MESSAGES */}
-                  <div className="flex min-h-0 flex-1 flex-col items-center justify-end">
+                  <div className="flex min-h-0 flex-1 flex-col justify-end">
                     {isClient ? (
                       <>
                         <MessageWall
@@ -619,7 +607,6 @@ export default function Chat() {
                           status={status}
                           durations={durations}
                           onDurationChange={handleDurationChange}
-                          onQuickReply={handleQuickReply}
                         />
                         {status === "submitted" && (
                           <div className="mt-2 flex w-full max-w-xs items-center gap-2 rounded-2xl bg-orange-50 px-3 py-2 text-[11px] text-orange-700 shadow-sm">
@@ -633,7 +620,7 @@ export default function Chat() {
                         )}
                       </>
                     ) : (
-                      <div className="flex w-full max-w-2xl justify-center">
+                      <div className="flex w-full justify-center">
                         <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
                       </div>
                     )}
@@ -744,8 +731,8 @@ export default function Chat() {
             </div>
           </div>
 
-          {/* RIGHT-SIDE KNOWLEDGE PANEL (LARGE, DESKTOP ONLY) */}
-          <aside className="hidden h-full w-[400px] flex-col md:flex">
+          {/* RIGHT-SIDE KNOWLEDGE PANEL */}
+          <aside className="hidden h-full w-[320px] flex-col md:flex">
             <div className="flex h-full flex-col rounded-3xl border border-orange-100 bg-white/80 p-4 text-xs text-slate-800 shadow-[0_24px_60px_rgba(15,23,42,0.04)] backdrop-blur-md">
               {/* Header */}
               <div className="mb-3 flex items-center justify-between">
@@ -777,9 +764,9 @@ export default function Chat() {
                 </p>
               </div>
 
-              {/* Example journeys / topics */}
+              {/* Journeys – 2 bullets each */}
               <div className="mb-3 flex-1 space-y-3 overflow-y-auto pr-1">
-                {guidanceTopics.map((section, idx) => (
+                {guidanceTopics.map((section) => (
                   <div
                     key={section.title}
                     className="rounded-2xl border border-slate-100 bg-slate-50/70 p-3"
@@ -806,27 +793,8 @@ export default function Chat() {
                 ))}
               </div>
 
-              {/* MSME tips – prompt chips */}
-              <div className="mt-1 border-t border-slate-100 pt-3">
-                <p className="mb-1 text-[11px] font-semibold text-slate-800">
-                  Quick prompts to get better answers
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {tipPrompts.map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      className="rounded-full border border-orange-200 bg-white px-3 py-1 text-[10px] text-slate-700 shadow-sm hover:border-orange-300 hover:bg-orange-50"
-                      onClick={() => handleQuickReply(p)}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Mini disclaimer */}
-              <p className="mt-3 text-[10px] leading-snug text-slate-400">
+              <p className="mt-1 text-[10px] leading-snug text-slate-400">
                 This panel is for orientation only. Always verify final scheme
                 details on official government portals and with your bank /
                 professional advisor.
