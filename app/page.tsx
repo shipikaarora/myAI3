@@ -85,7 +85,7 @@ const saveMessagesToStorage = (
     const data: StorageData = { messages, durations };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error("Failed to save messages to localStorage:", error);
+    console.error("Failed to save messages from localStorage:", error);
   }
 };
 
@@ -161,6 +161,21 @@ export default function Chat() {
     }));
   };
 
+  // Scroll handling refs
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
+
+  // Auto-scroll to bottom whenever messages or status change
+  useEffect(() => {
+    if (!scrollContainerRef.current) return;
+
+    scrollContainerRef.current.scrollTo({
+      top: scrollContainerRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages, status]);
+
   // Inject welcome message if nothing saved
   useEffect(() => {
     if (
@@ -205,14 +220,6 @@ export default function Chat() {
     saveMessagesToStorage(newMessages, newDurations);
     toast.success("Chat cleared");
   }
-
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const [showScrollDown, setShowScrollDown] = useState(false);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, status]);
 
   const quickPrompts = [
     "Check which MSME schemes I qualify for",
@@ -259,7 +266,7 @@ export default function Chat() {
         <aside className="hidden h-screen w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
-              <div className="h-40 w-40 rounded-full bg-white shadow-md flex items-center justify-center">
+              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white shadow-md">
                 <Image
                   src="/ashoka.png"
                   alt="Ashoka Chakra"
@@ -271,7 +278,7 @@ export default function Chat() {
               </div>
               <div className="pointer-events-none absolute inset-2 rounded-full bg-white/10 blur-xl" />
             </div>
-            <div className="text-center mt-2">
+            <div className="mt-2 text-center">
               <p className="text-lg font-semibold text-orange-900">
                 Udyog Mitra
               </p>
@@ -298,7 +305,7 @@ export default function Chat() {
             </ul>
           </div>
 
-          <p className="mt-auto pt-6 text-[11px] text-center text-orange-500">
+          <p className="mt-auto pt-6 text-center text-[11px] text-orange-500">
             Made for Indian MSMEs with ❤
             <span className="block opacity-80">
               © {new Date().getFullYear()} {OWNER_NAME}
@@ -307,8 +314,8 @@ export default function Chat() {
         </aside>
 
         {/* MAIN CHAT AREA */}
-        <main className="flex-1 px-3 py-4 md:px-6 md:py-6 flex items-stretch">
-          <div className="flex h-full w-full flex-col items-center justify-center">
+        <main className="flex flex-1 items-stretch px-3 py-4 md:px-6 md:py-6">
+          <div className="flex h-full w-full flex-col items-center">
             <div className="relative flex h-[calc(100vh-4rem)] w-full max-w-3xl flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
               {/* HEADER */}
               <header className="flex items-center justify-between border-b border-orange-100 px-4 py-3 md:px-6 md:py-4">
@@ -356,11 +363,11 @@ export default function Chat() {
               </header>
 
               {/* HERO SLIDES + MESSAGES */}
-              <div className="relative flex-1 overflow-hidden">
+              <div className="relative flex min-h-0 flex-1 overflow-hidden">
                 {/* Scrollable content */}
                 <div
                   ref={scrollContainerRef}
-                  className="flex h-full flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
+                  className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
                   onScroll={(e) => {
                     const el = e.currentTarget;
                     const atBottom =
@@ -378,7 +385,7 @@ export default function Chat() {
                         {heroSlides.map((slide, idx) => (
                           <div
                             key={idx}
-                            className="min-w-[200px] max-w-[220px] rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-xs text-slate-800 shadow-sm border border-orange-100"
+                            className="min-w-[200px] max-w-[220px] rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-xs text-slate-800 shadow-sm"
                           >
                             <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-orange-800">
                               {slide.icon}
@@ -412,7 +419,7 @@ export default function Chat() {
                   )}
 
                   {/* MESSAGES */}
-                  <div className="flex flex-col items-center justify-end min-h-full">
+                  <div className="flex min-h-0 flex-1 flex-col items-center justify-end">
                     {isClient ? (
                       <>
                         <MessageWall
