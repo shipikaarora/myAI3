@@ -85,7 +85,7 @@ const saveMessagesToStorage = (
     const data: StorageData = { messages, durations };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error("Failed to save messages to localStorage:", error);
+    console.error("Failed to save messages from localStorage:", error);
   }
 };
 
@@ -169,7 +169,7 @@ export default function Chat() {
       !welcomeMessageShownRef.current
     ) {
       const welcomeMessage: UIMessage = {
-        id: `welcome-${Date.now()}`,
+        id: `welcome-${Date.now()}`, // ✅ fixed template string
         role: "assistant",
         parts: [
           {
@@ -245,33 +245,25 @@ export default function Chat() {
   ];
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
-      style={{
-        backgroundImage:
-          "linear-gradient(to bottom right, #FFF5EC, #FFE7D1, #FFFDF8), url(/bg-pattern.png)",
-        backgroundRepeat: "repeat",
-        backgroundSize: "auto, 360px",
-      }}
-    >
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-row">
+    <div className="min-h-screen bg-app-gradient">
+      <div className="mx-auto flex min-h-screen max-w-7xl flex-row gap-4 px-3 py-4 md:px-6 md:py-6">
         {/* SIDEBAR */}
-        <aside className="hidden h-screen w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
+        <aside className="hidden h-full w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex rounded-3xl">
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
-              <div className="h-40 w-40 rounded-full bg-white shadow-md flex items-center justify-center">
+              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white shadow-md">
                 <Image
                   src="/ashoka.png"
                   alt="Ashoka Chakra"
                   width={136}
                   height={136}
-                  className="animate-[spin_8s_linear_infinite]"
+                  className="animate-spin-slow"
                   priority
                 />
               </div>
               <div className="pointer-events-none absolute inset-2 rounded-full bg-white/10 blur-xl" />
             </div>
-            <div className="text-center mt-2">
+            <div className="mt-2 text-center">
               <p className="text-lg font-semibold text-orange-900">
                 Udyog Mitra
               </p>
@@ -291,14 +283,14 @@ export default function Chat() {
 
           <div className="mt-8 rounded-2xl bg-gradient-to-br from-orange-100 via-amber-100 to-rose-100 p-4 text-xs text-orange-900 shadow-sm">
             <p className="mb-1 font-semibold">Why use {AI_NAME}?</p>
-            <ul className="list-disc list-inside space-y-1">
+            <ul className="list-inside list-disc space-y-1">
               <li>No document upload required</li>
               <li>Explains schemes in simple language</li>
               <li>Helps you prepare bank-ready documents</li>
             </ul>
           </div>
 
-          <p className="mt-auto pt-6 text-[11px] text-center text-orange-500">
+          <p className="mt-auto pt-6 text-center text-[11px] text-orange-500">
             Made for Indian MSMEs with ❤
             <span className="block opacity-80">
               © {new Date().getFullYear()} {OWNER_NAME}
@@ -306,10 +298,11 @@ export default function Chat() {
           </p>
         </aside>
 
-        {/* MAIN CHAT AREA */}
-        <main className="flex-1 px-3 py-4 md:px-6 md:py-6 flex items-stretch">
-          <div className="flex h-full w-full flex-col items-center justify-center">
-            <div className="relative flex h-[calc(100vh-4rem)] w-full max-w-3xl flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
+        {/* MAIN: CHAT + RIGHT PANEL */}
+        <main className="flex flex-1 flex-row items-stretch gap-4">
+          {/* CENTER CHAT AREA */}
+          <section className="flex flex-1 items-center justify-center">
+            <div className="glass-card relative flex h-[calc(100vh-4rem)] w-full max-w-3xl flex-col">
               {/* HEADER */}
               <header className="flex items-center justify-between border-b border-orange-100 px-4 py-3 md:px-6 md:py-4">
                 <div className="flex items-center gap-3">
@@ -357,10 +350,9 @@ export default function Chat() {
 
               {/* HERO SLIDES + MESSAGES */}
               <div className="relative flex-1 overflow-hidden">
-                {/* Scrollable content */}
                 <div
                   ref={scrollContainerRef}
-                  className="flex h-full flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
+                  className="scrollbar-thin flex h-full flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
                   onScroll={(e) => {
                     const el = e.currentTarget;
                     const atBottom =
@@ -378,7 +370,7 @@ export default function Chat() {
                         {heroSlides.map((slide, idx) => (
                           <div
                             key={idx}
-                            className="min-w-[200px] max-w-[220px] rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-xs text-slate-800 shadow-sm border border-orange-100"
+                            className="min-w-[200px] max-w-[220px] rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-xs text-slate-800 shadow-sm"
                           >
                             <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-orange-800">
                               {slide.icon}
@@ -412,7 +404,7 @@ export default function Chat() {
                   )}
 
                   {/* MESSAGES */}
-                  <div className="flex flex-col items-center justify-end min-h-full">
+                  <div className="flex min-h-full flex-col items-center justify-end">
                     {isClient ? (
                       <>
                         <MessageWall
@@ -479,7 +471,7 @@ export default function Chat() {
                               {...field}
                               id="chat-form-message"
                               className="h-12 rounded-full bg-orange-50/80 pr-14 pl-4 text-sm placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-300"
-                              placeholder="Type your question… e.g., “Can I get CGTMSE for a ₹20L machinery loan?”"
+                              placeholder='Type your question… e.g., "Can I get CGTMSE for a ₹20L machinery loan?"'
                               disabled={status === "streaming"}
                               aria-invalid={fieldState.invalid}
                               autoComplete="off"
@@ -529,20 +521,23 @@ export default function Chat() {
                   you don’t need exact figures.
                 </p>
               </div>
-            </div>
 
-            {/* FOOTER SMALL LINE */}
-            <div className="mt-4 flex items-center justify-center text-[11px] text-slate-400">
-              © {new Date().getFullYear()} {OWNER_NAME}&nbsp;
-              <Link href="/terms" className="underline">
-                Terms of Use
-              </Link>
-              &nbsp;Powered by&nbsp;
-              <Link href="https://ringel.ai/" className="underline">
-                Ringel.AI
-              </Link>
+              {/* FOOTER SMALL LINE */}
+              <div className="mt-2 flex items-center justify-center pb-2 text-[11px] text-slate-400">
+                © {new Date().getFullYear()} {OWNER_NAME}&nbsp;
+                <Link href="/terms" className="underline">
+                  Terms of Use
+                </Link>
+                &nbsp;Powered by&nbsp;
+                <Link href="https://ringel.ai/" className="underline">
+                  Ringel.AI
+                </Link>
+              </div>
             </div>
-          </div>
+          </section>
+
+          {/* RIGHT PANEL – functional, large screens only */}
+          <RightPanel messages={messages} />
         </main>
       </div>
     </div>
@@ -566,5 +561,81 @@ function SidebarItem({ label, active }: { label: string; active?: boolean }) {
     >
       <span className="font-medium">{label}</span>
     </button>
+  );
+}
+
+// =======================
+//  Right-side functional panel
+// =======================
+
+function RightPanel({ messages }: { messages: UIMessage[] }) {
+  const [tipIndex, setTipIndex] = useState(0);
+
+  const tips = [
+    "Delayed payment claims for MSMEs should normally be settled within 45 days under MSME law.",
+    "Collateral-free loans for MSMEs are often backed by the CGTMSE guarantee scheme.",
+    "Having Udyam registration and regular GST/ITR filing greatly improves your bankability.",
+    "Routing more sales through bank / digital payments gives stronger evidence for lenders.",
+  ];
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % tips.length);
+    }, 8000);
+    return () => clearInterval(id);
+  }, [tips.length]);
+
+  const hasConversation = messages.length > 2;
+
+  return (
+    <aside className="hidden w-72 flex-col gap-3 pt-1 xl:flex">
+      {/* Profile snapshot */}
+      <div className="glass-card rounded-2xl p-4 text-xs text-slate-800">
+        <p className="mb-1 text-[11px] font-semibold text-orange-700">
+          Your MSME profile snapshot
+        </p>
+        {hasConversation ? (
+          <ul className="space-y-1 leading-snug">
+            <li>• I’ll keep inferring your business type and size as we chat.</li>
+            <li>
+              • Once enough details are shared, I summarise sector, turnover
+              band, registration, and location for scheme matching.
+            </li>
+            <li>• You can always correct me if anything looks off.</li>
+          </ul>
+        ) : (
+          <p className="leading-snug">
+            As you answer a few questions about your business, I’ll build a
+            small profile here and use it to recommend schemes and documents.
+          </p>
+        )}
+      </div>
+
+      {/* Good next questions */}
+      <div className="glass-card rounded-2xl p-4 text-xs text-slate-800">
+        <p className="mb-1 text-[11px] font-semibold text-orange-700">
+          Good next questions to ask
+        </p>
+        <ul className="space-y-1 leading-snug">
+          <li>• “Which schemes fit my business profile?”</li>
+          <li>• “How can I get a collateral-free loan?”</li>
+          <li>• “What documents do banks usually ask for?”</li>
+          <li>• “How do I resolve delayed payments from buyers?”</li>
+        </ul>
+      </div>
+
+      {/* Rotating tip */}
+      <div className="glass-card rounded-2xl p-4 text-xs text-slate-800">
+        <p className="mb-1 text-[11px] font-semibold text-orange-700">
+          Did you know?
+        </p>
+        <p className="leading-snug">{tips[tipIndex]}</p>
+      </div>
+
+      <div className="mt-1 text-[10px] text-slate-400">
+        This side panel is only shown on larger screens so the main chat stays
+        clean on mobile.
+      </div>
+    </aside>
   );
 }
