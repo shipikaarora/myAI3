@@ -175,15 +175,22 @@ export default function Chat() {
   // Floating navigator state
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
 
-  // Auto-scroll to bottom whenever messages or status change
+  // Auto-scroll ONLY if user is already near the bottom
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
 
-    el.scrollTo({
-      top: el.scrollHeight,
-      behavior: "smooth",
-    });
+    const distanceFromBottom =
+      el.scrollHeight - el.scrollTop - el.clientHeight;
+
+    // If user is already close to the bottom, keep following new messages.
+    // If they scrolled up, don't fight them.
+    if (distanceFromBottom < 80) {
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages, status]);
 
   // Inject welcome message if nothing saved
