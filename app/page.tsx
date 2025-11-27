@@ -64,10 +64,7 @@ type StorageData = {
   durations: Record<string, number>;
 };
 
-const loadMessagesFromStorage = (): {
-  messages: UIMessage[];
-  durations: Record<string, number>;
-} => {
+const loadMessagesFromStorage = (): StorageData => {
   if (typeof window === "undefined") return { messages: [], durations: {} };
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -175,19 +172,21 @@ export default function Chat() {
   // Floating navigator state
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
 
-// Auto-scroll only when user is at/near bottom (showScrollDown === false)
-useEffect(() => {
-  const el = scrollContainerRef.current;
-  if (!el) return;
+  // Auto-scroll: only when user is at bottom (showScrollDown === false)
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
 
-  // If showScrollDown is true, user has scrolled up → do NOT auto-scroll
-  if (showScrollDown) return;
+    if (showScrollDown) {
+      // user has scrolled up → don't force scroll
+      return;
+    }
 
-  el.scrollTo({
-    top: el.scrollHeight,
-    behavior: "smooth",
-  });
-}, [messages, status, showScrollDown]);
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages, status, showScrollDown]);
 
   // Inject welcome message if nothing saved
   useEffect(() => {
@@ -388,7 +387,7 @@ useEffect(() => {
       )}
 
       <div className="mx-auto flex h-full max-w-6xl flex-row">
-        {/* SIDEBAR */}
+        {/* LEFT FIXED SIDEBAR */}
         <aside className="hidden h-full w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
@@ -441,10 +440,10 @@ useEffect(() => {
 
         {/* MAIN + RIGHT GUIDE */}
         <main className="flex h-full flex-1 items-stretch px-3 py-4 md:px-6 md:py-6">
-          <div className="flex h-full w-full flex-row gap-4">
+          <div className="flex h-full w_full flex-row gap-4">
             {/* CENTER CHAT COLUMN */}
             <div className="flex h-full flex-1 flex-col items-stretch">
-              {/* CHAT CARD – FULL WIDTH flex-1, NO max-w */}
+              {/* CHAT CARD – FULL WIDTH, NO max-w */}
               <div className="relative flex h-full w-full flex-1 flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
                 {/* HEADER */}
                 <header className="flex items-center justify-between border-b border-orange-100 px-4 py-3 md:px-6 md:py-4">
@@ -498,11 +497,11 @@ useEffect(() => {
                     ref={scrollContainerRef}
                     className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
                     onScroll={(e) => {
-  const el = e.currentTarget;
-  const atBottom =
-    el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-  setShowScrollDown(!atBottom); // true when user is NOT at bottom
-}}
+                      const el = e.currentTarget;
+                      const atBottom =
+                        el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+                      setShowScrollDown(!atBottom);
+                    }}
                   >
                     {/* Hero strip when conversation is new */}
                     {messages.length <= 2 && (
@@ -577,16 +576,17 @@ useEffect(() => {
                   </div>
 
                   {/* Scroll-to-bottom pill */}
-                  onClick={() => {
-  const el = scrollContainerRef.current;
-  if (!el) return;
-  el.scrollTo({
-    top: el.scrollHeight,
-    behavior: "smooth",
-  });
-  // we are back at bottom → allow auto-scroll again
-  setShowScrollDown(false);
-}};
+                  {showScrollDown && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = scrollContainerRef.current;
+                        if (!el) return;
+                        el.scrollTo({
+                          top: el.scrollHeight,
+                          behavior: "smooth",
+                        });
+                        setShowScrollDown(false);
                       }}
                       className="absolute bottom-24 right-4 rounded-full bg-slate-900/80 px-3 py-1 text-[11px] text-white shadow-lg"
                     >
@@ -696,7 +696,7 @@ useEffect(() => {
                 </span>
               </div>
 
-              {/* Policy ticker – simplified text (no animation for now) */}
+              {/* Policy ticker */}
               <div className="mb-4 rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 via-amber-50 to-rose-50 p-3">
                 <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold text-orange-800">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -704,7 +704,8 @@ useEffect(() => {
                 </div>
                 <p className="text-[11px] leading-snug text-orange-800">
                   GST & MSME: Composition scheme and threshold limits can impact
-                  your eligibility for certain schemes – keep turnover updated.
+                  your eligibility for certain schemes – keep turnover updated
+                  on all registrations.
                 </p>
               </div>
 
@@ -735,7 +736,7 @@ useEffect(() => {
                         className="text-left hover:underline"
                         onClick={() =>
                           sendMessage({
-                            text: "Explain Udyam registration step-by-step for my business with clear document list.",
+                            text: "Explain Udyam registration step-by-step for my business with a clear document list.",
                           })
                         }
                       >
@@ -758,12 +759,11 @@ useEffect(() => {
                         className="text-left hover:underline"
                         onClick={() =>
                           sendMessage({
-                            text: "Can I get collateral-free loan under CGTMSE? Here are my turnover and loan needs.",
+                            text: "Can I get a collateral-free loan under CGTMSE? These are my turnover and loan requirements.",
                           })
                         }
                       >
-                        Ask: “Can I get collateral-free loan under CGTMSE?
-                        Here are my turnover and loan needs.”
+                        Ask: “Can I get a collateral-free loan under CGTMSE?”
                       </button>
                     </li>
                     <li>
@@ -811,8 +811,7 @@ useEffect(() => {
                           })
                         }
                       >
-                        Ask: “Draft a polite email reminder quoting MSME
-                        payment rules.”
+                        Ask: “Draft a polite email reminder quoting MSME rules.”
                       </button>
                     </li>
                   </ul>
