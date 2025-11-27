@@ -21,6 +21,13 @@ import {
   FileText,
   Landmark,
   Scale,
+  User,
+  History,
+  Settings as SettingsIcon,
+  FileStack,
+  Info,
+  PanelRightOpen,
+  X,
 } from "lucide-react";
 import { MessageWall } from "@/components/messages/message-wall";
 
@@ -165,6 +172,9 @@ export default function Chat() {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [showScrollDown, setShowScrollDown] = useState(false);
 
+  // Floating navigator state
+  const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
+
   // Auto-scroll to bottom whenever messages or status change
   useEffect(() => {
     const el = scrollContainerRef.current;
@@ -261,6 +271,114 @@ export default function Chat() {
         backgroundSize: "auto, 360px",
       }}
     >
+      {/* FLOATING NAVIGATOR TOGGLE BUTTON */}
+      <button
+        type="button"
+        aria-label="Open quick navigator"
+        onClick={() => setIsNavigatorOpen((prev) => !prev)}
+        className="fixed right-6 top-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-lg hover:from-orange-600 hover:to-rose-500"
+      >
+        {isNavigatorOpen ? (
+          <X className="h-5 w-5" />
+        ) : (
+          <PanelRightOpen className="h-5 w-5" />
+        )}
+      </button>
+
+      {/* FLOATING NAVIGATOR PANEL */}
+      {isNavigatorOpen && (
+        <div className="fixed right-6 top-40 z-40 w-80 rounded-2xl border border-orange-100 bg-white/95 p-4 shadow-2xl backdrop-blur">
+          <h3 className="mb-2 text-sm font-semibold text-orange-900">
+            Quick Navigator
+          </h3>
+
+          {/* User Profile */}
+          <button
+            type="button"
+            className="mb-2 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs hover:bg-orange-50"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+              <User className="h-4 w-4 text-orange-700" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-medium text-orange-900">
+                User Profile
+              </span>
+              <span className="text-[11px] text-orange-600">
+                View / update your MSME and owner details.
+              </span>
+            </div>
+          </button>
+
+          {/* Chat History */}
+          <button
+            type="button"
+            className="mb-2 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs hover:bg-orange-50"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+              <History className="h-4 w-4 text-orange-700" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-medium text-orange-900">
+                Chat History
+              </span>
+              <span className="text-[11px] text-orange-600">
+                Revisit or continue previous conversations.
+              </span>
+            </div>
+          </button>
+
+          {/* Settings */}
+          <button
+            type="button"
+            className="mb-2 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs hover:bg-orange-50"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+              <SettingsIcon className="h-4 w-4 text-orange-700" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-medium text-orange-900">
+                Settings
+              </span>
+              <span className="text-[11px] text-orange-600">
+                Language, theme, and other preferences.
+              </span>
+            </div>
+          </button>
+
+          {/* Schemes */}
+          <button
+            type="button"
+            className="mb-3 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs hover:bg-orange-50"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+              <FileStack className="h-4 w-4 text-orange-700" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-medium text-orange-900">
+                Schemes
+              </span>
+              <span className="text-[11px] text-orange-600">
+                Browse central, state, and bank-linked MSME schemes.
+              </span>
+            </div>
+          </button>
+
+          {/* Disclaimer */}
+          <div className="flex gap-2 rounded-xl bg-orange-50 p-3">
+            <div className="mt-0.5">
+              <Info className="h-4 w-4 text-orange-700" />
+            </div>
+            <p className="text-[11px] leading-snug text-orange-800">
+              <span className="font-semibold">Disclaimer:</span> This chatbot
+              provides informational guidance based on MSME rules. It does not
+              replace official government notifications, portal instructions, or
+              professional legal / financial advice.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto flex h-full max-w-6xl flex-row">
         {/* SIDEBAR */}
         <aside className="hidden h-full w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
@@ -364,10 +482,10 @@ export default function Chat() {
               </header>
 
               {/* HERO + MESSAGES AREA */}
-              <div className="relative flex flex-1 min-h-0 overflow-hidden">
+              <div className="relative flex min-h-0 flex-1 overflow-hidden">
                 <div
                   ref={scrollContainerRef}
-                  className="flex flex-1 min-h-0 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
+                  className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
                   onScroll={(e) => {
                     const el = e.currentTarget;
                     const atBottom =
@@ -419,7 +537,7 @@ export default function Chat() {
                   )}
 
                   {/* MESSAGES */}
-                  <div className="flex flex-1 min-h-0 flex-col items-center justify-end">
+                  <div className="flex min-h-0 flex-1 flex-col items-center justify-end">
                     {isClient ? (
                       <>
                         <MessageWall
