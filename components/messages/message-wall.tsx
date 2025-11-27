@@ -101,6 +101,7 @@ type MessageWallProps = {
  * - Highlights important assistant messages
  * - Day separators + timestamps
  * - Optional checklist if assistant outputs “Action items”
+ * - No quick-reply chips
  */
 export function MessageWall({
   messages,
@@ -116,7 +117,7 @@ export function MessageWall({
 
   let lastDayLabel: string | null = null;
 
-  // ⬇️ No max-width here – takes full width of the center card
+  // FULL WIDTH inside the card
   return (
     <div className="relative w-full">
       <div className="relative px-3 py-4 md:px-5 md:py-6">
@@ -170,7 +171,7 @@ export function MessageWall({
                 <div className={`flex w-full ${rowClass}`}>
                   <div
                     className={`
-                      max-w-[92%] rounded-2xl px-4 py-3
+                      w-full max-w-[95%] rounded-2xl px-4 py-3
                       backdrop-blur-sm transition-all duration-150
                       ${baseBubbleClass} ${importantClass}
                     `}
