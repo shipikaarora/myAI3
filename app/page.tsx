@@ -109,7 +109,7 @@ export default function Chat() {
 
       const audio = new Audio("/welcome-music.mp3");
       audio.volume = 0.5;
-      audio.play().catch(() => {});
+      audio.play().catch(() => { });
 
       setTimeout(() => audio.pause(), 30000); // max 30 seconds
       setHasPlayedMusic(true);
@@ -168,6 +168,7 @@ export default function Chat() {
   // Scroll handling
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [showScrollDown, setShowScrollDown] = useState(false);
+  const userScrolledUpRef = useRef(false);
 
   // Floating navigator state
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
@@ -177,14 +178,14 @@ export default function Chat() {
     const el = scrollContainerRef.current;
     if (!el) return;
 
-    // If user has scrolled up (showScrollDown === true) → DON'T auto-scroll
-    if (showScrollDown) return;
+    // If user has scrolled up (checked via ref) → DON'T auto-scroll
+    if (userScrolledUpRef.current) return;
 
     el.scrollTo({
       top: el.scrollHeight,
-      behavior: "smooth",
+      behavior: "auto",
     });
-  }, [messages, status, showScrollDown]);
+  }, [messages, status]);
 
   // Inject welcome message if nothing saved
   useEffect(() => {
@@ -288,7 +289,7 @@ export default function Chat() {
       {/* FLOATING NAVIGATOR PANEL */}
       {isNavigatorOpen && (
         <div className="fixed left-6 top-40 z-40 w-80 rounded-2xl border border-orange-100 bg-white/95 p-4 shadow-2xl backdrop-blur">
-          <h3 className="mb-3 text-sm font-semibold text-orange-900">
+          <h3 className="mb-3 text-xl font-semibold text-orange-900">
             Quick Navigator
           </h3>
 
@@ -301,10 +302,10 @@ export default function Chat() {
               <User className="h-4 w-4 text-orange-700" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[13px] font-medium text-orange-900">
+              <span className="text-lg font-medium text-orange-900">
                 User Profile
               </span>
-              <span className="text-[11px] text-orange-600">
+              <span className="text-base text-orange-600">
                 View / update your MSME and owner details (coming soon).
               </span>
             </div>
@@ -322,7 +323,7 @@ export default function Chat() {
               <span className="text-[13px] font-medium text-orange-900">
                 Chat History
               </span>
-              <span className="text-[11px] text-orange-600">
+              <span className="text-base text-orange-600">
                 Quickly jump back to recent discussions (coming soon).
               </span>
             </div>
@@ -340,7 +341,7 @@ export default function Chat() {
               <span className="text-[13px] font-medium text-orange-900">
                 Settings
               </span>
-              <span className="text-[11px] text-orange-600">
+              <span className="text-base text-orange-600">
                 Language, theme, and other preferences (coming soon).
               </span>
             </div>
@@ -363,7 +364,7 @@ export default function Chat() {
               <span className="text-[13px] font-medium text-orange-900">
                 Schemes
               </span>
-              <span className="text-[11px] text-orange-600">
+              <span className="text-base text-orange-600">
                 Ask the bot to list and explain major schemes in one place.
               </span>
             </div>
@@ -374,7 +375,7 @@ export default function Chat() {
             <div className="mt-0.5">
               <Info className="h-4 w-4 text-orange-700" />
             </div>
-            <p className="text-[11px] leading-snug text-orange-800">
+            <p className="text-xs leading-snug text-orange-800">
               <span className="font-semibold">Disclaimer:</span> This chatbot
               provides informational guidance based on MSME rules. It does not
               replace official government notifications, portal instructions, or
@@ -386,7 +387,7 @@ export default function Chat() {
 
       <div className="mx-auto flex h-full max-w-6xl flex-row">
         {/* LEFT FIXED SIDEBAR */}
-        <aside className="hidden h-full w-[260px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
+        <aside className="hidden h-full w-[600px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
               <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white shadow-md">
@@ -411,7 +412,7 @@ export default function Chat() {
             </div>
           </div>
 
-          <nav className="mt-8 space-y-2 text-sm">
+          <nav className="mt-8 space-y-2 text-xl">
             <SidebarItem label="Home" active />
             <SidebarItem label="Udyam Registration" />
             <SidebarItem label="GST Help" />
@@ -419,7 +420,7 @@ export default function Chat() {
             <SidebarItem label="Delayed Payments / Samadhaan" />
           </nav>
 
-          <div className="mt-8 rounded-2xl bg-gradient-to-br from-orange-100 via-amber-100 to-rose-100 p-4 text-xs text-orange-900 shadow-sm">
+          <div className="mt-8 rounded-2xl bg-gradient-to-br from-orange-100 via-amber-100 to-rose-100 p-4 text-lg text-orange-900 shadow-sm">
             <p className="mb-1 font-semibold">Why use {AI_NAME}?</p>
             <ul className="list-inside list-disc space-y-1">
               <li>No document upload required</li>
@@ -428,7 +429,7 @@ export default function Chat() {
             </ul>
           </div>
 
-          <p className="mt-auto pt-6 text-center text-[11px] text-orange-500">
+          <p className="mt-auto pt-6 text-center text-base text-orange-500">
             Made for Indian MSMEs with ❤
             <span className="block opacity-80">
               © {new Date().getFullYear()} {OWNER_NAME}
@@ -440,7 +441,7 @@ export default function Chat() {
         <main className="flex h-full flex-1 items-stretch px-3 py-4 md:px-6 md:py-6">
           <div className="flex h-full w-full flex-row gap-4">
             {/* CENTER CHAT COLUMN */}
-            <div className="flex h-full flex-1 flex-col items-stretch">
+            <div className="flex h-full min-w-0 flex-1 flex-col items-stretch" style={{ minWidth: '600px' }}>
               {/* CHAT CARD */}
               <div className="relative flex h-full w-full flex-1 flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
                 {/* HEADER */}
@@ -461,11 +462,11 @@ export default function Chat() {
                           height={26}
                           className="rounded-md object-contain"
                         />
-                        <h1 className="text-sm font-semibold text-slate-900">
+                        <h1 className="text-xl font-semibold text-slate-900">
                           Chat with {AI_NAME}
                         </h1>
                       </div>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-lg text-slate-500">
                         MSME schemes & documentation — simple, practical
                         answers.
                       </p>
@@ -473,14 +474,14 @@ export default function Chat() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="hidden items-center gap-1 rounded-full bg-orange-50 px-3 py-1 text-[11px] font-medium text-orange-700 md:flex">
+                    <span className="hidden items-center gap-1 rounded-full bg-orange-50 px-3 py-1 text-base font-medium text-orange-700 md:flex">
                       <Sparkles className="h-3 w-3" />
                       Powered by AI + MSME rules
                     </span>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="cursor-pointer rounded-full border-orange-200 text-xs"
+                      className="cursor-pointer rounded-full border-orange-200 text-lg"
                       onClick={clearChat}
                     >
                       <Plus className="mr-1 h-3 w-3" />
@@ -490,50 +491,50 @@ export default function Chat() {
                 </header>
 
                 {/* HERO + MESSAGES AREA */}
-                <div className="relative flex min-h-0 flex-1 overflow-hidden">
+                <div className="relative flex min-h-0 flex-1">
                   <div
                     ref={scrollContainerRef}
-                    className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3 md:px-6 md:py-4"
+                    className="flex min-h-0 flex-1 flex-col overflow-y-scroll overflow-x-hidden px-4 py-3 md:px-6 md:py-4"
                     onScroll={(e) => {
                       const el = e.currentTarget;
                       const atBottom =
-                        el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+                        el.scrollHeight - el.scrollTop - el.clientHeight < 100;
                       setShowScrollDown(!atBottom);
+                      userScrolledUpRef.current = !atBottom;
                     }}
                   >
-                    {/* Hero strip when conversation is new */}
-                    {messages.length <= 2 && (
-                      <div className="mb-4">
-                        <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-orange-600">
+                    {/* Content wrapper with consistent width */}
+                    <div className="min-w-full w-full">
+                      {/* Hero strip when conversation is new */}
+                      <div className={`mb-4 ${messages.length > 2 ? 'invisible h-0 overflow-hidden' : ''}`}>
+                        <p className="mb-2 text-base font-medium uppercase tracking-wide text-orange-600">
                           Key MSME benefits you can ask about
                         </p>
                         <div className="flex gap-3 overflow-x-auto pb-2">
                           {heroSlides.map((slide, idx) => (
                             <div
                               key={idx}
-                              className="min-w-[200px] rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-xs text-slate-800 shadow-sm"
+                              className="min-w-[200px] rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-lg text-slate-800 shadow-sm"
                             >
-                              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-orange-800">
+                              <div className="mb-1 flex items-center gap-1.5 text-base font-semibold text-orange-800">
                                 {slide.icon}
                                 <span>{slide.title}</span>
                               </div>
-                              <p className="text-[11px] leading-snug">
+                              <p className="text-base leading-snug">
                                 {slide.text}
                               </p>
                             </div>
                           ))}
                         </div>
                       </div>
-                    )}
 
-                    {/* Quick prompts at the very start */}
-                    {messages.length <= 2 && (
-                      <div className="mb-4 flex flex-wrap gap-2 text-xs">
+                      {/* Quick prompts at the very start */}
+                      <div className={`mb-4 flex flex-wrap gap-2 text-lg ${messages.length > 2 ? 'invisible h-0 overflow-hidden' : ''}`}>
                         {quickPrompts.map((label) => (
                           <button
                             key={label}
                             type="button"
-                            className="rounded-full border border-orange-200 bg-white px-3 py-1 text-[11px] text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50"
+                            className="rounded-full border border-orange-200 bg-white px-3 py-1 text-base text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50"
                             onClick={() => {
                               sendMessage({ text: label });
                             }}
@@ -542,35 +543,36 @@ export default function Chat() {
                           </button>
                         ))}
                       </div>
-                    )}
 
-                    {/* MESSAGES */}
-                    <div className="flex min-h-0 flex-1 flex-col justify-end">
-                      {isClient ? (
-                        <>
-                          <MessageWall
-                            messages={messages}
-                            status={status}
-                            durations={durations}
-                            onDurationChange={handleDurationChange}
-                          />
-                          {status === "submitted" && (
-                            <div className="mt-2 flex w-full max-w-xs items-center gap-2 rounded-2xl bg-orange-50 px-3 py-2 text-[11px] text-orange-700 shadow-sm">
-                              <div className="flex gap-1">
-                                <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-orange-400" />
-                                <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-orange-400 [animation-delay:120ms]" />
-                                <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-orange-400 [animation-delay:240ms]" />
+                      {/* MESSAGES */}
+                      <div className="flex w-full flex-col">
+                        {isClient ? (
+                          <>
+                            <MessageWall
+                              messages={messages}
+                              status={status}
+                              durations={durations}
+                              onDurationChange={handleDurationChange}
+                            />
+                            {status === "submitted" && (
+                              <div className="mt-2 flex w-full max-w-xs items-center gap-2 rounded-2xl bg-orange-50 px-3 py-2 text-base text-orange-700 shadow-sm">
+                                <div className="flex gap-1">
+                                  <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-orange-400" />
+                                  <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-orange-400 [animation-delay:120ms]" />
+                                  <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-orange-400 [animation-delay:240ms]" />
+                                </div>
+                                <span>Udyami is preparing your answer…</span>
                               </div>
-                              <span>Udyami is preparing your answer…</span>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="flex w-full justify-center">
-                          <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                        </div>
-                      )}
+                            )}
+                          </>
+                        ) : (
+                          <div className="flex w-full justify-center">
+                            <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    {/* Close width constraint wrapper */}
                   </div>
 
                   {/* Scroll-to-bottom pill */}
@@ -585,8 +587,9 @@ export default function Chat() {
                           behavior: "smooth",
                         });
                         setShowScrollDown(false);
+                        userScrolledUpRef.current = false;
                       }}
-                      className="absolute bottom-24 right-4 rounded-full bg-slate-900/80 px-3 py-1 text-[11px] text-white shadow-lg"
+                      className="absolute bottom-24 right-4 rounded-full bg-slate-900/80 px-3 py-1 text-base text-white shadow-lg"
                     >
                       Jump to latest
                     </button>
@@ -612,7 +615,7 @@ export default function Chat() {
                               <Input
                                 {...field}
                                 id="chat-form-message"
-                                className="h-12 rounded-full bg-orange-50/80 pr-14 pl-4 text-sm placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-300"
+                                className="h-12 rounded-full bg-orange-50/80 pr-14 pl-4 text-xl placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-300"
                                 placeholder='Type your question… e.g., "Can I get CGTMSE for a ₹20L machinery loan?"'
                                 disabled={status === "streaming"}
                                 aria-invalid={fieldState.invalid}
@@ -636,20 +639,20 @@ export default function Chat() {
                               )}
                               {(status === "streaming" ||
                                 status === "submitted") && (
-                                <Button
-                                  className="absolute right-1.5 top-1.5 h-9 w-9 rounded-full"
-                                  size="icon"
-                                  type="button"
-                                  onClick={() => {
-                                    stop();
-                                  }}
-                                >
-                                  <Square className="h-4 w-4" />
-                                </Button>
-                              )}
+                                  <Button
+                                    className="absolute right-1.5 top-1.5 h-9 w-9 rounded-full"
+                                    size="icon"
+                                    type="button"
+                                    onClick={() => {
+                                      stop();
+                                    }}
+                                  >
+                                    <Square className="h-4 w-4" />
+                                  </Button>
+                                )}
                             </div>
                             {fieldState.error && (
-                              <p className="mt-1 text-[11px] text-rose-500">
+                              <p className="mt-1 text-base text-rose-500">
                                 {fieldState.error.message}
                               </p>
                             )}
@@ -658,7 +661,7 @@ export default function Chat() {
                       />
                     </FieldGroup>
                   </form>
-                  <p className="mt-2 text-[10px] text-slate-400">
+                  <p className="mt-2 text-sm text-slate-400">
                     Tip: Rough ranges (turnover, loan amount, years) are enough
                     – you don’t need exact figures.
                   </p>
@@ -666,7 +669,7 @@ export default function Chat() {
               </div>
 
               {/* FOOTER SMALL LINE */}
-              <div className="mt-4 flex items-center justify-center text-[11px] text-slate-400">
+              <div className="mt-4 flex items-center justify-center text-base text-slate-400">
                 © {new Date().getFullYear()} {OWNER_NAME}&nbsp;
                 <Link href="/terms" className="underline">
                   Terms of Use
@@ -679,28 +682,28 @@ export default function Chat() {
             </div>
 
             {/* RIGHT KNOWLEDGE PANEL */}
-            <aside className="hidden h-full w-[320px] flex-col rounded-3xl border border-orange-100 bg-white/80 px-5 py-5 text-xs text-slate-800 shadow-[0_24px_60px_rgba(15,23,42,0.04)] backdrop-blur md:flex">
+            <aside className="hidden h-full w-[320px] flex-col rounded-3xl border border-orange-100 bg-white/80 px-5 py-5 text-lg text-slate-800 shadow-[0_24px_60px_rgba(15,23,42,0.04)] backdrop-blur md:flex">
               <div className="mb-2 flex items-center justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-orange-700">
+                  <p className="text-base font-semibold uppercase tracking-wide text-orange-700">
                     MSME Guide
                   </p>
-                  <p className="text-xs font-medium text-slate-900">
+                  <p className="text-lg font-medium text-slate-900">
                     How to use this assistant
                   </p>
                 </div>
-                <span className="rounded-full bg-orange-50 px-2 py-1 text-[10px] font-semibold text-orange-700">
+                <span className="rounded-full bg-orange-50 px-2 py-1 text-base font-semibold text-orange-700">
                   For Indian MSMEs
                 </span>
               </div>
 
               {/* Policy ticker */}
               <div className="mb-4 rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 via-amber-50 to-rose-50 p-3">
-                <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold text-orange-800">
+                <div className="mb-1 flex items-center gap-2 text-base font-semibold text-orange-800">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
                   Live policy & scheme pointers
                 </div>
-                <p className="text-[11px] leading-snug text-orange-800">
+                <p className="text-base leading-snug text-orange-800">
                   GST & MSME: Composition scheme and threshold limits can impact
                   your eligibility for certain schemes – keep turnover updated
                   on all registrations.
@@ -710,10 +713,10 @@ export default function Chat() {
               <div className="space-y-3 overflow-y-auto">
                 {/* NEW TO MSME */}
                 <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-3">
-                  <p className="mb-1 text-[11px] font-semibold text-orange-800">
+                  <p className="mb-1 text-base font-semibold text-orange-800">
                     ▸ If you are NEW to MSME schemes
                   </p>
-                  <ul className="space-y-1 text-[11px] text-slate-700">
+                  <ul className="space-y-1 text-base text-slate-700">
                     <li>
                       <button
                         type="button"
@@ -747,10 +750,10 @@ export default function Chat() {
 
                 {/* LOANS / SUBSIDIES */}
                 <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-3">
-                  <p className="mb-1 text-[11px] font-semibold text-orange-800">
+                  <p className="mb-1 text-base font-semibold text-orange-800">
                     ▸ If you want LOANS / SUBSIDIES
                   </p>
-                  <ul className="space-y-1 text-[11px] text-slate-700">
+                  <ul className="space-y-1 text-base text-slate-700">
                     <li>
                       <button
                         type="button"
@@ -782,10 +785,10 @@ export default function Chat() {
 
                 {/* DELAYED PAYMENTS */}
                 <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-3">
-                  <p className="mb-1 text-[11px] font-semibold text-orange-800">
+                  <p className="mb-1 text-base font-semibold text-orange-800">
                     ▸ If you are facing DELAYED PAYMENTS
                   </p>
-                  <ul className="space-y-1 text-[11px] text-slate-700">
+                  <ul className="space-y-1 text-base text-slate-700">
                     <li>
                       <button
                         type="button"
@@ -824,8 +827,8 @@ export default function Chat() {
             </aside>
           </div>
         </main>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
 

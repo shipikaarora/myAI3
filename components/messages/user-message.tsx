@@ -11,7 +11,7 @@ type UserMessageProps = {
  */
 export function UserMessage({ message }: UserMessageProps) {
   return (
-    <div className="text-sm whitespace-pre-wrap leading-relaxed">
+    <div className="text-lg whitespace-pre-wrap leading-relaxed">
       {message.parts.map((part, i) => {
         if (part.type === "text") {
           return (

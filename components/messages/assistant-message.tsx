@@ -23,7 +23,7 @@ export function AssistantMessage({
   onDurationChange,
 }: AssistantMessageProps) {
   return (
-    <div className="text-sm flex flex-col gap-3 whitespace-pre-wrap leading-relaxed">
+    <div className="text-lg flex flex-col gap-3 whitespace-pre-wrap leading-relaxed">
       {message.parts.map((part, i) => {
         const isStreaming =
           status === "streaming" &&
