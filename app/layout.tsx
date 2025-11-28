@@ -20,6 +20,13 @@ export const metadata: Metadata = {
     "AI-powered assistant to help Indian MSMEs with schemes, loans, Udyam registration, GST and delayed payments.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

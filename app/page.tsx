@@ -27,8 +27,33 @@ import {
   FileStack,
   Info,
   PanelLeftOpen,
+
   X,
+  Home,
+  HelpCircle,
+  IndianRupee,
+  Clock,
+  CheckCircle2,
+  Heart,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Menu,
 } from "lucide-react";
+import { useWebSpeech } from "@/hooks/use-web-speech";
+import { ChatSidebarLeft } from "@/components/chat-sidebar-left";
+import { ChatSidebarRight } from "@/components/chat-sidebar-right";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
+// Helper to extract text from UIMessage
+// function getPlainText(message: UIMessage): string {
+//   return (
+//     message.parts
+//       ?.map((p) => (p.type === "text" ? p.text : ""))
+//       .join(" ") || ""
+//   );
+// }
 import { MessageWall } from "@/components/messages/message-wall";
 
 import type { UIMessage } from "ai";
@@ -172,6 +197,27 @@ export default function Chat() {
 
   // Floating navigator state
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
+  const [currentPolicyIndex, setCurrentPolicyIndex] = useState(0);
+  const initialInputRef = useRef("");
+
+
+  const {
+    isListening,
+    transcript,
+    startListening,
+    stopListening,
+    resetTranscript,
+    supported: voiceSupported,
+  } = useWebSpeech();
+
+
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPolicyIndex((prev) => (prev + 1) % POLICY_UPDATES.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Auto-scroll: only when user is at bottom (showScrollDown === false)
   useEffect(() => {
@@ -221,7 +267,18 @@ export default function Chat() {
   function onSubmit(data: z.infer<typeof formSchema>) {
     sendMessage({ text: data.message });
     form.reset();
+    resetTranscript();
+    stopListening();
   }
+
+  // Sync transcript to input
+  useEffect(() => {
+    if (isListening && transcript) {
+      form.setValue("message", transcript);
+    }
+  }, [transcript, isListening, form]);
+
+
 
   function clearChat() {
     const newMessages: UIMessage[] = [];
@@ -231,6 +288,21 @@ export default function Chat() {
     saveMessagesToStorage(newMessages, newDurations);
     toast.success("Chat cleared");
   }
+
+  const SUGGESTED_ACTIONS = [
+    { label: "Check eligibility", action: "Check my eligibility for PMEGP scheme" },
+    { label: "Document list", action: "What documents do I need for a mudra loan?" },
+    { label: "Application steps", action: "How to apply for Udyam Registration?" },
+    { label: "Subsidy details", action: "Explain the subsidy structure of PMEGP" },
+  ];
+
+  const POLICY_UPDATES = [
+    "GST & MSME: Composition scheme and threshold limits can impact your eligibility for certain schemes – keep turnover updated on all registrations.",
+    "Udyam Registration: It is mandatory for availing most MSME benefits. Ensure your details are up to date.",
+    "PM Vishwakarma: New scheme launched for artisans and craftspeople with collateral-free credit support.",
+    "Delayed Payments: File a case with MSEFC if your payment is delayed beyond 45 days.",
+    "ZED Certification: Get certified to avail subsidies on technology adoption and testing.",
+  ];
 
   const quickPrompts = [
     "Check which MSME schemes I qualify for",
@@ -264,7 +336,7 @@ export default function Chat() {
 
   return (
     <div
-      className="h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
+      className="h-dvh bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
       style={{
         backgroundImage:
           "linear-gradient(to bottom right, #FFF5EC, #FFE7D1, #FFFDF8), url(/bg-pattern.png)",
@@ -277,7 +349,7 @@ export default function Chat() {
         type="button"
         aria-label="Open quick navigator"
         onClick={() => setIsNavigatorOpen((prev) => !prev)}
-        className="fixed left-6 top-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-lg hover:from-orange-600 hover:to-rose-500"
+        className="fixed left-6 top-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-lg hover:from-orange-600 hover:to-rose-500 md:hidden"
       >
         {isNavigatorOpen ? (
           <X className="h-5 w-5" />
@@ -288,7 +360,7 @@ export default function Chat() {
 
       {/* FLOATING NAVIGATOR PANEL */}
       {isNavigatorOpen && (
-        <div className="fixed left-6 top-40 z-40 w-80 rounded-2xl border border-orange-100 bg-white/95 p-4 shadow-2xl backdrop-blur">
+        <div className="fixed left-6 top-40 z-40 w-80 rounded-2xl border border-orange-100 bg-white/95 p-4 shadow-2xl backdrop-blur md:hidden">
           <h3 className="mb-3 text-xl font-semibold text-orange-900">
             Quick Navigator
           </h3>
@@ -385,88 +457,51 @@ export default function Chat() {
         </div>
       )}
 
-      <div className="mx-auto flex h-full max-w-6xl flex-row">
-        {/* LEFT FIXED SIDEBAR */}
-        <aside className="hidden h-full w-[600px] flex-col border-r border-orange-200 bg-[#FFF3E5] px-6 py-6 shadow-sm md:flex">
-          <div className="flex flex-col items-center gap-3">
-            <div className="relative">
-              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white shadow-md">
-                <Image
-                  src="/ashoka.png"
-                  alt="Ashoka Chakra"
-                  width={136}
-                  height={136}
-                  className="animate-[spin_8s_linear_infinite]"
-                  priority
-                />
-              </div>
-              <div className="pointer-events-none absolute inset-2 rounded-full bg-white/10 blur-xl" />
-            </div>
-            <div className="mt-2 text-center">
-              <p className="text-lg font-semibold text-orange-900">
-                Udyog Mitra
-              </p>
-              <p className="text-xs font-medium uppercase tracking-wide text-orange-600">
-                MSME साथी
-              </p>
-            </div>
-          </div>
-
-          <nav className="mt-8 space-y-2 text-xl">
-            <SidebarItem label="Home" active />
-            <SidebarItem label="Udyam Registration" />
-            <SidebarItem label="GST Help" />
-            <SidebarItem label="Loan & Subsidy Schemes" />
-            <SidebarItem label="Delayed Payments / Samadhaan" />
-          </nav>
-
-          <div className="mt-8 rounded-2xl bg-gradient-to-br from-orange-100 via-amber-100 to-rose-100 p-4 text-lg text-orange-900 shadow-sm">
-            <p className="mb-1 font-semibold">Why use {AI_NAME}?</p>
-            <ul className="list-inside list-disc space-y-1">
-              <li>No document upload required</li>
-              <li>Explains schemes in simple language</li>
-              <li>Helps you prepare bank-ready documents</li>
-            </ul>
-          </div>
-
-          <p className="mt-auto pt-6 text-center text-base text-orange-500">
-            Made for Indian MSMEs with ❤
-            <span className="block opacity-80">
-              © {new Date().getFullYear()} {OWNER_NAME}
-            </span>
-          </p>
-        </aside>
+      <div className="flex h-full w-full flex-col md:flex-row">
+        {/* LEFT FIXED SIDEBAR (DESKTOP) */}
+        <div className="hidden md:flex h-full w-[400px] shrink-0">
+          <ChatSidebarLeft />
+        </div>
 
         {/* MAIN + RIGHT GUIDE */}
         <main className="flex h-full flex-1 items-stretch px-3 py-4 md:px-6 md:py-6">
           <div className="flex h-full w-full flex-row gap-4">
             {/* CENTER CHAT COLUMN */}
-            <div className="flex h-full min-w-0 flex-1 flex-col items-stretch" style={{ minWidth: '600px' }}>
+            <div className="flex h-full min-w-0 flex-1 flex-col items-stretch">
               {/* CHAT CARD */}
               <div className="relative flex h-full w-full flex-1 flex-col rounded-3xl border border-orange-100 bg-white/80 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-md">
                 {/* HEADER */}
                 <header className="flex items-center justify-between border-b border-orange-100 px-4 py-3 md:px-6 md:py-4">
                   <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-md">
-                        <Bot className="h-5 w-5" />
+                    {/* Mobile Menu Trigger */}
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="md:hidden -ml-2">
+                          <Menu className="h-6 w-6 text-orange-700" />
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="left" className="p-0 w-[85vw] sm:w-[400px] border-none bg-transparent">
+                        <ChatSidebarLeft />
+                      </SheetContent>
+                    </Sheet>
+
+                    <div className="relative hidden md:block">
+                      <div className="h-12 w-12 overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-sm">
+                        <Image
+                          src="/logo.png"
+                          alt="Udyami Logo"
+                          width={48}
+                          height={48}
+                          className="h-full w-full object-cover"
+                        />
                       </div>
                       <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-white bg-emerald-500" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <Image
-                          src="/logo.png"
-                          alt="Udyami Logo"
-                          width={26}
-                          height={26}
-                          className="rounded-md object-contain"
-                        />
-                        <h1 className="text-xl font-semibold text-slate-900">
-                          Chat with {AI_NAME}
-                        </h1>
-                      </div>
-                      <p className="text-lg text-slate-500">
+                      <h1 className="text-xl font-semibold text-slate-900">
+                        Chat with {AI_NAME}
+                      </h1>
+                      <p className="text-sm text-slate-500">
                         MSME schemes & documentation — simple, practical
                         answers.
                       </p>
@@ -474,19 +509,37 @@ export default function Chat() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="hidden items-center gap-1 rounded-full bg-orange-50 px-3 py-1 text-base font-medium text-orange-700 md:flex">
+
+                    <span className="hidden items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-base font-medium text-blue-700 md:flex">
                       <Sparkles className="h-3 w-3" />
                       Powered by AI + MSME rules
                     </span>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="cursor-pointer rounded-full border-orange-200 text-lg"
+                      className="cursor-pointer rounded-full border-orange-200 text-lg hidden md:flex"
                       onClick={clearChat}
+                      aria-label="Start new chat"
                     >
                       <Plus className="mr-1 h-3 w-3" />
                       {CLEAR_CHAT_TEXT}
                     </Button>
+
+                    {/* Mobile Info Trigger */}
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="md:hidden">
+                          <Info className="h-6 w-6 text-orange-700" />
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="right" className="p-0 w-[85vw] sm:w-[350px] border-none bg-transparent">
+                        <ChatSidebarRight
+                          currentPolicyIndex={currentPolicyIndex}
+                          policyUpdates={POLICY_UPDATES}
+                          onSendMessage={(text) => sendMessage({ text })}
+                        />
+                      </SheetContent>
+                    </Sheet>
                   </div>
                 </header>
 
@@ -512,9 +565,11 @@ export default function Chat() {
                         </p>
                         <div className="flex gap-3 overflow-x-auto pb-2">
                           {heroSlides.map((slide, idx) => (
-                            <div
+                            <button
                               key={idx}
-                              className="min-w-[200px] rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-lg text-slate-800 shadow-sm"
+                              type="button"
+                              onClick={() => sendMessage({ text: `${slide.title} ${slide.text}` })}
+                              className="min-w-[200px] cursor-pointer rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 px-3 py-3 text-left text-lg text-slate-800 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
                             >
                               <div className="mb-1 flex items-center gap-1.5 text-base font-semibold text-orange-800">
                                 {slide.icon}
@@ -523,7 +578,7 @@ export default function Chat() {
                               <p className="text-base leading-snug">
                                 {slide.text}
                               </p>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -534,7 +589,7 @@ export default function Chat() {
                           <button
                             key={label}
                             type="button"
-                            className="rounded-full border border-orange-200 bg-white px-3 py-1 text-base text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50"
+                            className="rounded-full border border-orange-200 bg-white px-3 py-1 text-base text-slate-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-orange-300 hover:bg-orange-50 active:scale-95 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
                             onClick={() => {
                               sendMessage({ text: label });
                             }}
@@ -611,11 +666,12 @@ export default function Chat() {
                             >
                               Message
                             </FieldLabel>
-                            <div className="relative">
-                              <Input
+                            <div className="relative flex items-center h-12 rounded-full bg-white shadow-sm border border-orange-200 px-2 transition-all duration-300 focus-within:border-orange-600 focus-within:ring-4 focus-within:ring-orange-100 focus-within:shadow-md">
+                              <input
                                 {...field}
                                 id="chat-form-message"
-                                className="h-12 rounded-full bg-orange-50/80 pr-14 pl-4 text-xl placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-300"
+                                className="flex-1 bg-transparent border-none text-xl placeholder:text-slate-400 !outline-none !ring-0 !shadow-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none px-2 min-w-0"
+                                style={{ boxShadow: "none", outline: "none" }}
                                 placeholder='Type your question… e.g., "Can I get CGTMSE for a ₹20L machinery loan?"'
                                 disabled={status === "streaming"}
                                 aria-invalid={fieldState.invalid}
@@ -627,35 +683,69 @@ export default function Chat() {
                                   }
                                 }}
                               />
+
+                              {/* MIC BUTTON */}
+                              {voiceSupported && status === "ready" && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className={`h-10 w-10 rounded-full transition-all shrink-0 mr-1 ${isListening
+                                    ? "bg-red-100 text-red-600 hover:bg-red-200 animate-pulse"
+                                    : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                    }`}
+                                  onClick={() => {
+                                    if (isListening) {
+                                      stopListening();
+                                    } else {
+                                      form.setValue("message", ""); // Clear existing text
+                                      resetTranscript();
+                                      startListening();
+                                    }
+                                  }}
+                                  title="Voice Input"
+                                >
+                                  <Mic className={`h-5 w-5 ${isListening ? "fill-current" : ""}`} />
+                                </Button>
+                              )}
+
+                              {/* SEND BUTTON */}
                               {(status === "ready" || status === "error") && (
                                 <Button
-                                  className="absolute right-1.5 top-1.5 h-9 w-9 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-md hover:from-orange-600 hover:to-rose-500"
+                                  className="h-9 w-9 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-md hover:from-orange-600 hover:to-rose-500 shrink-0"
                                   type="submit"
                                   disabled={!field.value.trim()}
                                   size="icon"
+                                  aria-label="Send message"
                                 >
                                   <ArrowUp className="h-4 w-4" />
                                 </Button>
                               )}
-                              {(status === "streaming" ||
-                                status === "submitted") && (
-                                  <Button
-                                    className="absolute right-1.5 top-1.5 h-9 w-9 rounded-full"
-                                    size="icon"
-                                    type="button"
-                                    onClick={() => {
-                                      stop();
-                                    }}
-                                  >
-                                    <Square className="h-4 w-4" />
-                                  </Button>
-                                )}
+
+                              {/* STOP BUTTON */}
+                              {(status === "streaming" || status === "submitted") && (
+                                <Button
+                                  className="h-9 w-9 rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300 shrink-0"
+                                  size="icon"
+                                  type="button"
+                                  onClick={stop}
+                                  aria-label="Stop generating"
+                                >
+                                  <Square className="h-4 w-4" />
+                                </Button>
+                              )}
                             </div>
                             {fieldState.error && (
                               <p className="mt-1 text-base text-rose-500">
                                 {fieldState.error.message}
                               </p>
                             )}
+                            <div className="mt-1 flex justify-end px-2">
+                              <span className={`text-xs font-medium transition-colors ${(field.value?.length || 0) > 1800 ? "text-rose-500" : "text-slate-400"
+                                }`}>
+                                {field.value?.length || 0}/2000
+                              </span>
+                            </div>
                           </Field>
                         )}
                       />
@@ -682,172 +772,19 @@ export default function Chat() {
             </div>
 
             {/* RIGHT KNOWLEDGE PANEL */}
-            <aside className="hidden h-full w-[320px] flex-col rounded-3xl border border-orange-100 bg-white/80 px-5 py-5 text-lg text-slate-800 shadow-[0_24px_60px_rgba(15,23,42,0.04)] backdrop-blur md:flex">
-              <div className="mb-2 flex items-center justify-between">
-                <div>
-                  <p className="text-base font-semibold uppercase tracking-wide text-orange-700">
-                    MSME Guide
-                  </p>
-                  <p className="text-lg font-medium text-slate-900">
-                    How to use this assistant
-                  </p>
-                </div>
-                <span className="rounded-full bg-orange-50 px-2 py-1 text-base font-semibold text-orange-700">
-                  For Indian MSMEs
-                </span>
-              </div>
-
-              {/* Policy ticker */}
-              <div className="mb-4 rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 via-amber-50 to-rose-50 p-3">
-                <div className="mb-1 flex items-center gap-2 text-base font-semibold text-orange-800">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  Live policy & scheme pointers
-                </div>
-                <p className="text-base leading-snug text-orange-800">
-                  GST & MSME: Composition scheme and threshold limits can impact
-                  your eligibility for certain schemes – keep turnover updated
-                  on all registrations.
-                </p>
-              </div>
-
-              <div className="space-y-3 overflow-y-auto">
-                {/* NEW TO MSME */}
-                <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-3">
-                  <p className="mb-1 text-base font-semibold text-orange-800">
-                    ▸ If you are NEW to MSME schemes
-                  </p>
-                  <ul className="space-y-1 text-base text-slate-700">
-                    <li>
-                      <button
-                        type="button"
-                        className="text-left hover:underline"
-                        onClick={() =>
-                          sendMessage({
-                            text: "Create a simple checklist of registrations and licenses I must do first as a new MSME.",
-                          })
-                        }
-                      >
-                        Ask: “Create a simple checklist of registrations I must
-                        do first.”
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        className="text-left hover:underline"
-                        onClick={() =>
-                          sendMessage({
-                            text: "Explain Udyam registration step-by-step for my business with a clear document list.",
-                          })
-                        }
-                      >
-                        Ask: “Explain Udyam registration step-by-step for my
-                        business.”
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* LOANS / SUBSIDIES */}
-                <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-3">
-                  <p className="mb-1 text-base font-semibold text-orange-800">
-                    ▸ If you want LOANS / SUBSIDIES
-                  </p>
-                  <ul className="space-y-1 text-base text-slate-700">
-                    <li>
-                      <button
-                        type="button"
-                        className="text-left hover:underline"
-                        onClick={() =>
-                          sendMessage({
-                            text: "Can I get a collateral-free loan under CGTMSE? These are my turnover and loan requirements.",
-                          })
-                        }
-                      >
-                        Ask: “Can I get a collateral-free loan under CGTMSE?”
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        className="text-left hover:underline"
-                        onClick={() =>
-                          sendMessage({
-                            text: "What documents do banks usually ask MSMEs for when applying for a term loan and working capital?",
-                          })
-                        }
-                      >
-                        Ask: “What documents do banks usually ask MSMEs for?”
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* DELAYED PAYMENTS */}
-                <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-3">
-                  <p className="mb-1 text-base font-semibold text-orange-800">
-                    ▸ If you are facing DELAYED PAYMENTS
-                  </p>
-                  <ul className="space-y-1 text-base text-slate-700">
-                    <li>
-                      <button
-                        type="button"
-                        className="text-left hover:underline"
-                        onClick={() =>
-                          sendMessage({
-                            text: "Explain MSME Samadhaan and how I can file a case for delayed payments from a large buyer.",
-                          })
-                        }
-                      >
-                        Ask: “Explain MSME Samadhaan and how to file a case.”
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        className="text-left hover:underline"
-                        onClick={() =>
-                          sendMessage({
-                            text: "Draft a polite email reminder quoting MSME payment rules and interest for delayed payment.",
-                          })
-                        }
-                      >
-                        Ask: “Draft a polite email reminder quoting MSME rules.”
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <p className="mt-3 text-[10px] leading-snug text-slate-400">
-                This panel is for orientation only. Always verify final scheme
-                details on official government portals and with your bank /
-                professional advisor.
-              </p>
-            </aside>
+            <div className="hidden md:flex h-full w-[350px] shrink-0">
+              <ChatSidebarRight
+                currentPolicyIndex={currentPolicyIndex}
+                policyUpdates={POLICY_UPDATES}
+                onSendMessage={(text) => sendMessage({ text })}
+              />
+            </div>
           </div>
         </main>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }
 
-// =======================
-//  Sidebar item helper
-// =======================
 
-function SidebarItem({ label, active }: { label: string; active?: boolean }) {
-  return (
-    <button
-      type="button"
-      className={[
-        "flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-xs transition",
-        active
-          ? "bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-sm"
-          : "bg-orange-50 text-slate-800 hover:bg-orange-100",
-      ].join(" ")}
-    >
-      <span className="font-medium">{label}</span>
-    </button>
-  );
-}
+

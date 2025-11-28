@@ -154,7 +154,7 @@ export function MessageWall({
                 lastDayLabel = currentDayLabel;
                 daySeparator = (
                   <div className="my-2 flex justify-center">
-                    <div className="rounded-full bg-slate-200/70 px-3 py-1 text-base text-slate-600 shadow-sm dark:bg-slate-800/80 dark:text-slate-300">
+                    <div className="rounded-full bg-slate-200/70 px-3 py-1 text-sm text-slate-600 shadow-sm dark:bg-slate-800/80 dark:text-slate-300">
                       {currentDayLabel}
                     </div>
                   </div>
@@ -186,7 +186,7 @@ export function MessageWall({
                   >
                     {/* Important badge */}
                     {isImportant && (
-                      <div className="mb-1 flex items-center gap-1 text-base font-semibold text-yellow-700 dark:text-yellow-200">
+                      <div className="mb-1 flex items-center gap-1 text-sm font-semibold text-yellow-700 dark:text-yellow-200">
                         <Info className="h-3 w-3" />
                         Important
                       </div>
@@ -211,7 +211,7 @@ export function MessageWall({
 
                     {/* Checklist (optional) */}
                     {checklistItems.length > 0 && (
-                      <div className="mt-3 rounded-xl border border-slate-200/70 bg-white/80 px-3 py-2 text-base text-slate-700 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200">
+                      <div className="mt-3 rounded-xl border border-slate-200/70 bg-white/80 px-3 py-2 text-sm text-slate-700 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/80 dark:text-slate-200">
                         <div className="mb-1 font-semibold">Action items</div>
                         <ul className="space-y-1">
                           {checklistItems.map((item, idx) => (
@@ -229,7 +229,7 @@ export function MessageWall({
 
                     {/* Timestamp */}
                     {timeLabel && (
-                      <div className="mt-1 flex justify-end text-base text-slate-500 dark:text-slate-400">
+                      <div className="mt-1 flex justify-end text-sm text-slate-500 dark:text-slate-400">
                         {timeLabel}
                       </div>
                     )}
